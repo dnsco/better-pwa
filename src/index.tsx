@@ -2,14 +2,14 @@ import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import { RecoilRoot } from "recoil";
-import { App } from "./App";
+import { ActivitiesForm } from "./ActivitiesForm";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import { reportWebVitals } from "./reportWebVitals";
 
 ReactDOM.render(
   <React.StrictMode>
     <RecoilRoot>
-      <App />
+      <ActivitiesForm />
     </RecoilRoot>
   </React.StrictMode>,
   document.getElementById("root")

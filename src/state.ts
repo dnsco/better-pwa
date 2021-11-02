@@ -3,8 +3,10 @@ import { recoilPersist } from "recoil-persist";
 
 const { persistAtom } = recoilPersist();
 
-export const counterState = atom({
-  key: "count",
-  default: 0,
+export type Activity = { name: string };
+
+export const activityState = atom<Activity[]>({
+  key: "activities",
+  default: [],
   effects_UNSTABLE: [persistAtom],
 });
