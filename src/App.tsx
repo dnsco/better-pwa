@@ -1,33 +1,24 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-import { useRecoilState} from 'recoil'
-import {counterState} from "./state";
+import React from "react";
+import { useRecoilState } from "recoil";
+import "./App.css";
+import { counterState } from "./state";
 
+export function App(): JSX.Element {
+  const [count, setCount] = useRecoilState(counterState);
 
-function App() {
-    const [count, setCount] = useRecoilState(counterState)
-
-    return (
-            <div className="App">
-                <header className="App-header">
-                    <img src={logo} className="App-logo" alt="logo"/>
-                    <p>
-                        Counter: {count}
-                        <button onClick={() => setCount(count + 1)}>Increase</button>
-                        <button onClick={() => setCount(count - 1)}>Decrease</button>
-                    </p>
-                    <a
-                        className="App-link"
-                        href="https://reactjs.org"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        Learn React
-                    </a>
-                </header>
-            </div>
-    );
+  return (
+    <div className="App">
+      <header className="App-header">
+        <div>
+          <p>Counter: {count}</p>
+          <button onClick={() => setCount(count + 1)} type="button">
+            Increase
+          </button>
+          <button onClick={() => setCount(count - 1)} type="button">
+            Decrease
+          </button>
+        </div>
+      </header>
+    </div>
+  );
 }
-
-export default App;
