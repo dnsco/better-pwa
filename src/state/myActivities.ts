@@ -5,14 +5,23 @@ const { persistAtom } = recoilPersist();
 
 export type Activity = { name: string };
 
-const api = {
+export interface Api {
+  myActivities(): Promise<Activity[]>;
+}
+
+const nullApi: Api = {
   myActivities(): Promise<Activity[]> {
-    return Promise.resolve([{ name: "Mudkips" }]);
+    return Promise.resolve([]);
   },
 };
 
+export const apiState = atom<Api>({
+  key: "api",
+  default: nullApi,
+});
+
 export const localMyActivities = atom<Activity[]>({
-  key: "activities",
+  key: "localActivities",
   default: [],
   effects_UNSTABLE: [persistAtom],
 });
@@ -36,6 +45,7 @@ export const shouldFetchOwnActivitiesAt = atom<Date>({
 export const apiMyActivies = selector<Activity[]>({
   key: "apiMyActivities",
   get: ({ get }) => {
+    const api = get(apiState);
     get(shouldFetchOwnActivitiesAt);
     return api.myActivities();
   },
