@@ -1,10 +1,10 @@
 import React, { useRef } from "react";
 import { useRecoilState } from "recoil";
 import "./App.css";
-import { activityState } from "../state";
+import { localMyActivities } from "../state/myActivities";
 
 export function ActivitiesForm(): JSX.Element {
-  const [activities, setActivities] = useRecoilState(activityState);
+  const [activities, setActivities] = useRecoilState(localMyActivities);
   const inputEl = useRef<HTMLInputElement>(null);
   return (
     <div className="App">

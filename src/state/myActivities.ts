@@ -11,7 +11,7 @@ const api = {
   },
 };
 
-export const activityState = atom<Activity[]>({
+export const localMyActivities = atom<Activity[]>({
   key: "activities",
   default: [],
   effects_UNSTABLE: [persistAtom],
@@ -33,10 +33,20 @@ export const shouldFetchOwnActivitiesAt = atom<Date>({
   ],
 });
 
-export const myActivityState = selector<Activity[]>({
-  key: "myActivities",
+export const apiMyActivies = selector<Activity[]>({
+  key: "apiMyActivities",
   get: ({ get }) => {
     get(shouldFetchOwnActivitiesAt);
     return api.myActivities();
+  },
+});
+
+export const mergedActivities = selector<Activity[]>({
+  key: "mergedMyActivities",
+  get: async ({ get }) => {
+    const localActs = get(localMyActivities);
+    const apiActs = get(apiMyActivies);
+
+    return localActs.concat(apiActs);
   },
 });
