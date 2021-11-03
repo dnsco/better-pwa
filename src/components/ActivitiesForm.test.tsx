@@ -2,7 +2,7 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { RecoilRoot } from "recoil";
 import { ActivitiesForm } from "./ActivitiesForm";
-import { Activity } from "./state";
+import { Activity } from "../state";
 
 describe("THE APP", () => {
   test("you can create a thing and it goes in local storage", () => {

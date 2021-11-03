@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import { RecoilRoot } from "recoil";
-import { ActivitiesForm } from "./ActivitiesForm";
+import { ActivitiesForm } from "./components/ActivitiesForm";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import { reportWebVitals } from "./reportWebVitals";
 

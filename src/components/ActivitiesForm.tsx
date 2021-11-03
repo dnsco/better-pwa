@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { useRecoilState } from "recoil";
 import "./App.css";
-import { activityState } from "./state";
+import { activityState } from "../state";
 
 export function ActivitiesForm(): JSX.Element {
   const [activities, setActivities] = useRecoilState(activityState);
