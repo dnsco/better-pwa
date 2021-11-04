@@ -8,37 +8,56 @@ import {
 } from "./myActivities";
 import { Api, ApiActivity, ApiPromise, SUCCESS } from "./api";
 
-const { NEW } = SyncStatus;
-const api: Api = {
-  myActivities(): ApiPromise<ApiActivity[]> {
-    return Promise.resolve({
-      kind: SUCCESS,
-      data: [{ name: "Mudkips" }],
-    });
-  },
-};
+const { NEW, SYNCED } = SyncStatus;
 
-describe("myActivityState", () => {
-  test("It grabs the activities from the api", async () => {
-    const state = getSnapshot().map((s) => {
-      s.set(apiState, api);
-      s.set(localMyActivities, [{ name: "pikachu", status: NEW }]);
-      return s;
-    });
+describe("My Activity State", () => {
+  const pikachu = { name: "pikachu", status: NEW };
 
-    const localPikachu = state
+  const newPikachuSnapshot = getSnapshot().map((s) =>
+    s.set(localMyActivities, [pikachu])
+  );
+
+  describe("localActivityState", () => {
+    const localPikachu = newPikachuSnapshot
       .getLoadable(localMyActivities)
       .valueOrThrow()
       .find((a) => a.name === "pikachu");
 
-    expect(localPikachu).toBeTruthy();
+    it("has a newPikachu", () => {
+      expect(localPikachu?.status).toEqual(NEW);
+    });
+  });
 
-    const allActivities = await state
-      .getLoadable(mergedActivities)
-      .promiseOrThrow();
-    expect(allActivities.map((a) => a.name)).toEqual(["pikachu", "Mudkips"]);
+  describe("With remote activities", () => {
+    const api: Api = {
+      myActivities(): ApiPromise<ApiActivity[]> {
+        return Promise.resolve({
+          kind: SUCCESS,
+          data: [{ name: "Mudkips" }],
+        });
+      },
+    };
 
-    const activities = await state.getLoadable(apiMyActivies).toPromise();
-    expect(activities[0]?.name).toEqual("Mudkips");
+    const state = newPikachuSnapshot.map((s) => s.set(apiState, api));
+
+    describe("apiActivities", () => {
+      it("returns the api's activities", async () => {
+        const activities = await state.getLoadable(apiMyActivies).toPromise();
+        expect(activities[0]?.name).toEqual("Mudkips");
+      });
+    });
+
+    describe("mergedActivities", () => {
+      it("merges local and new activities", async () => {
+        const allActivities = await state
+          .getLoadable(mergedActivities)
+          .promiseOrThrow();
+
+        expect(allActivities.map((a) => [a.name, a.status])).toEqual([
+          ["pikachu", NEW],
+          ["Mudkips", SYNCED],
+        ]);
+      });
+    });
   });
 });
