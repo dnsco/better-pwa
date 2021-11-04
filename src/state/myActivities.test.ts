@@ -1,16 +1,16 @@
 import { snapshot_UNSTABLE as getSnapshot } from "recoil";
 import {
   Activity,
-  Api,
   apiMyActivies,
   apiState,
   localMyActivities,
   mergedActivities,
 } from "./myActivities";
+import { Api, ApiPromise, SUCCESS } from "./api";
 
 const api: Api = {
-  myActivities(): Promise<Activity[]> {
-    return Promise.resolve([{ name: "Mudkips" }]);
+  myActivities(): ApiPromise<Activity[]> {
+    return Promise.resolve({ kind: SUCCESS, data: [{ name: "Mudkips" }] });
   },
 };
 
