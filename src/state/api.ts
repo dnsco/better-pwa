@@ -1,5 +1,3 @@
-import { Activity } from "./myActivities";
-
 export enum ResponseKind {
   SUCCESS = "success",
   ERROR = "error",
@@ -13,15 +11,18 @@ export type ErrorResponse = { kind: typeof ERROR; error: Error };
 export type ApiPromise<T> = Promise<SuccessResponse<T> | ErrorResponse>;
 
 export interface Api {
-  myActivities(): ApiPromise<Activity[]>;
+  myActivities(): ApiPromise<ApiActivity[]>;
 }
 
 export const nullApi: Api = {
-  myActivities(): ApiPromise<Activity[]> {
+  myActivities(): ApiPromise<ApiActivity[]> {
     return Promise.resolve({ kind: SUCCESS, data: [] });
   },
 };
 
+export interface ApiActivity {
+  name: string;
+}
 export class OauthApi implements Api {
   oauthToken: string;
 
@@ -29,7 +30,7 @@ export class OauthApi implements Api {
     this.oauthToken = oauthToken;
   }
 
-  myActivities(): ApiPromise<Activity[]> {
+  myActivities(): ApiPromise<ApiActivity[]> {
     const url = "https://better.ngrok.io/api/v0/activities";
     return this.parseResponse(url);
   }

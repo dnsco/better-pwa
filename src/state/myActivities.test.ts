@@ -1,16 +1,20 @@
 import { snapshot_UNSTABLE as getSnapshot } from "recoil";
 import {
-  Activity,
   apiMyActivies,
   apiState,
   localMyActivities,
   mergedActivities,
+  SyncStatus,
 } from "./myActivities";
-import { Api, ApiPromise, SUCCESS } from "./api";
+import { Api, ApiActivity, ApiPromise, SUCCESS } from "./api";
 
+const { NEW } = SyncStatus;
 const api: Api = {
-  myActivities(): ApiPromise<Activity[]> {
-    return Promise.resolve({ kind: SUCCESS, data: [{ name: "Mudkips" }] });
+  myActivities(): ApiPromise<ApiActivity[]> {
+    return Promise.resolve({
+      kind: SUCCESS,
+      data: [{ name: "Mudkips" }],
+    });
   },
 };
 
@@ -18,7 +22,7 @@ describe("myActivityState", () => {
   test("It grabs the activities from the api", async () => {
     const state = getSnapshot().map((s) => {
       s.set(apiState, api);
-      s.set(localMyActivities, [{ name: "pikachu" }]);
+      s.set(localMyActivities, [{ name: "pikachu", status: NEW }]);
       return s;
     });
 

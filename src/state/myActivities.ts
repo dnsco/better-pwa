@@ -1,10 +1,17 @@
 import { atom, selector } from "recoil";
 import { recoilPersist } from "recoil-persist";
-import { Api, nullApi, SUCCESS } from "./api";
+import { Api, ApiActivity, nullApi, SUCCESS } from "./api";
 
 const { persistAtom } = recoilPersist();
 
-export type Activity = { name: string };
+export interface Activity extends ApiActivity {
+  status: SyncStatus;
+}
+
+export enum SyncStatus {
+  NEW = "new",
+  SYNCED = "synced",
+}
 
 export const apiState = atom<Api>({
   key: "api",
@@ -33,7 +40,7 @@ export const shouldFetchOwnActivitiesAt = atom<Date>({
   ],
 });
 
-export const apiMyActivies = selector<Activity[]>({
+export const apiMyActivies = selector<ApiActivity[]>({
   key: "apiMyActivities",
   get: async ({ get }) => {
     const api = get(apiState);
@@ -50,6 +57,8 @@ export const mergedActivities = selector<Activity[]>({
     const localActs = get(localMyActivities);
     const apiActs = get(apiMyActivies);
 
-    return localActs.concat(apiActs);
+    return localActs.concat(
+      apiActs.map((a) => ({ ...a, status: SyncStatus.SYNCED }))
+    );
   },
 });

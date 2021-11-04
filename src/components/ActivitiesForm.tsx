@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { useRecoilState } from "recoil";
 import "./App.css";
-import { localMyActivities } from "../state/myActivities";
+import { localMyActivities, SyncStatus } from "../state/myActivities";
 
 export function ActivitiesForm(): JSX.Element {
   const [activities, setActivities] = useRecoilState(localMyActivities);
@@ -16,6 +16,7 @@ export function ActivitiesForm(): JSX.Element {
               setActivities(
                 activities.concat({
                   name: inputEl.current?.value ?? "New Activity",
+                  status: SyncStatus.NEW,
                 })
               )
             }
