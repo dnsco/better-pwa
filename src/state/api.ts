@@ -21,3 +21,35 @@ export const nullApi: Api = {
     return Promise.resolve({ kind: SUCCESS, data: [] });
   },
 };
+
+export class OauthApi implements Api {
+  oauthToken: string;
+
+  constructor(oauthToken: string) {
+    this.oauthToken = oauthToken;
+  }
+
+  myActivities(): ApiPromise<Activity[]> {
+    const url = "https://better.ngrok.io/api/v0/activities";
+    return this.parseResponse(url);
+  }
+
+  private parseResponse<T>(url: string): ApiPromise<T> {
+    const token = this.oauthToken;
+    return fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then(async (resp) => {
+        if (resp.ok) {
+          return resp.json();
+        }
+        throw resp;
+      })
+      .then(
+        (json) => ({ kind: SUCCESS, data: json }),
+        (e): ErrorResponse => ({ kind: ERROR, error: e })
+      );
+  }
+}
