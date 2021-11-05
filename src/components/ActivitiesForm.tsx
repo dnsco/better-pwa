@@ -1,18 +1,35 @@
 import React, { useRef } from "react";
 import { useRecoilState } from "recoil";
 import "./App.css";
-import { Activity, localMyActivities, SyncStatus } from "../state/myActivities";
+import {
+  Activity,
+  apiState,
+  localMyActivities,
+  SyncStatus,
+} from "../state/myActivities";
 import { Frequency } from "../api/responseTypes";
+import { OauthApi } from "../api/oauthApi";
+import { nullApi } from "../api/nullApi";
 
 export function ActivitiesForm(): JSX.Element {
   const [activities, setActivities] = useRecoilState(localMyActivities);
-  const inputEl = useRef<HTMLInputElement>(null);
+  const [_, setApiState] = useRecoilState(apiState);
+
+  const oauthTokenInput = useRef<HTMLInputElement>(null);
+  const nameInput = useRef<HTMLInputElement>(null);
+
+  const setOauthToken = () => {
+    const token = oauthTokenInput.current?.value;
+    const newApi = token ? new OauthApi(token) : nullApi;
+
+    setApiState(newApi);
+  };
 
   const createNewActivity = () => {
     const activity: Activity = {
       frequency: Frequency.DAILY,
       uuid: "asdlkj", // todo make actual uuid here
-      name: inputEl.current?.value ?? "New Activity",
+      name: nameInput.current?.value ?? "New Activity",
       status: SyncStatus.NEW,
     };
 
@@ -23,7 +40,22 @@ export function ActivitiesForm(): JSX.Element {
     <div className="App">
       <header className="App-header">
         <div>
-          <input ref={inputEl} type="text" aria-label="name" />
+          <div>
+            <input
+              ref={oauthTokenInput}
+              type="text"
+              aria-label="oauth"
+              placeholder="oauth token"
+              onChange={setOauthToken}
+            />
+          </div>
+
+          <input
+            ref={nameInput}
+            type="text"
+            aria-label="name"
+            placeholder="name"
+          />
           <button onClick={createNewActivity} aria-label="create" type="button">
             Create
           </button>
