@@ -1,28 +1,7 @@
-export enum ResponseKind {
-  SUCCESS = "success",
-  ERROR = "error",
-}
+import { Activity } from "../state/myActivities";
+import { Api, ApiPromise, ERROR, ErrorResponse, SUCCESS } from "./base";
+import { ApiActivity, UUID } from "./responseTypes";
 
-export const { SUCCESS, ERROR } = ResponseKind;
-
-export type SuccessResponse<T> = { kind: typeof SUCCESS; data: T };
-export type ErrorResponse = { kind: typeof ERROR; error: Error };
-
-export type ApiPromise<T> = Promise<SuccessResponse<T> | ErrorResponse>;
-
-export interface Api {
-  myActivities(): ApiPromise<ApiActivity[]>;
-}
-
-export const nullApi: Api = {
-  myActivities(): ApiPromise<ApiActivity[]> {
-    return Promise.resolve({ kind: SUCCESS, data: [] });
-  },
-};
-
-export interface ApiActivity {
-  name: string;
-}
 export class OauthApi implements Api {
   oauthToken: string;
 
@@ -52,5 +31,13 @@ export class OauthApi implements Api {
         (json) => ({ kind: SUCCESS, data: json }),
         (e): ErrorResponse => ({ kind: ERROR, error: e })
       );
+  }
+
+  createActivity(
+    _name: string,
+    _uuid: UUID,
+    _frequency: number
+  ): ApiPromise<Activity> {
+    return this.parseResponse("CREATELOLOl");
   }
 }

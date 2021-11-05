@@ -1,6 +1,8 @@
 import { atom, selector } from "recoil";
 import { recoilPersist } from "recoil-persist";
-import { Api, ApiActivity, nullApi, SUCCESS } from "./api";
+import { Api, SUCCESS } from "../api/base";
+import { nullApi } from "../api/nullApi";
+import { ApiActivity } from "../api/responseTypes";
 
 const { persistAtom } = recoilPersist();
 

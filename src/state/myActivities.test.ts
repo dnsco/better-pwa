@@ -1,17 +1,25 @@
 import { snapshot_UNSTABLE as getSnapshot } from "recoil";
 import {
+  Activity,
   apiMyActivies,
   apiState,
   localMyActivities,
   mergedActivities,
   SyncStatus,
 } from "./myActivities";
-import { Api, ApiActivity, ApiPromise, SUCCESS } from "./api";
+import { Api, ApiPromise, apiPromiseSuccess } from "../api/base";
+import { nullApi } from "../api/nullApi";
+import { ApiActivity, Frequency, UUID } from "../api/responseTypes";
 
 const { NEW, SYNCED } = SyncStatus;
 
 describe("My Activity State", () => {
-  const pikachu = { name: "pikachu", status: NEW };
+  const pikachu: Activity = {
+    frequency: Frequency.DAILY,
+    uuid: "lolol",
+    name: "pikachu",
+    status: NEW,
+  };
 
   const newPikachuSnapshot = getSnapshot().map((s) =>
     s.set(localMyActivities, [pikachu])
@@ -26,15 +34,50 @@ describe("My Activity State", () => {
     it("has a newPikachu", () => {
       expect(localPikachu?.status).toEqual(NEW);
     });
+
+    describe("creating it remotely", () => {
+      // todo DO SOME CRAZY ATOM EFFECT BULLSHIT AND PUT A CREATE FUNCTION IN THE API!
+      const api: Api = {
+        ...nullApi,
+        createActivity(
+          name: string,
+          uuid: UUID,
+          frequency: number
+        ): ApiPromise<ApiActivity> {
+          const activitiy: ApiActivity = { name, uuid, frequency };
+          return apiPromiseSuccess(activitiy);
+        },
+      };
+
+      const state = getSnapshot().map((s) => {
+        s.set(apiState, api);
+        s.set(localMyActivities, [pikachu]);
+        return s;
+      });
+
+      xit("sets the status to synced", async () => {
+        const activities = await state
+          .getLoadable(localMyActivities)
+          .toPromise();
+
+        const activity = activities[0];
+        expect(activity?.name).toEqual("pikachu");
+        expect(activity?.status).toEqual(SYNCED);
+      });
+    });
   });
 
   describe("With remote activities", () => {
+    const mudkips: ApiActivity = {
+      ...pikachu,
+      uuid: "ALLO",
+      name: "Mudkips",
+    };
+
     const api: Api = {
+      ...nullApi,
       myActivities(): ApiPromise<ApiActivity[]> {
-        return Promise.resolve({
-          kind: SUCCESS,
-          data: [{ name: "Mudkips" }],
-        });
+        return apiPromiseSuccess([mudkips]);
       },
     };
 

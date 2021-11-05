@@ -1,4 +1,5 @@
-import { ERROR, OauthApi } from "./api";
+import { OauthApi } from "./oauthApi";
+import { ERROR } from "./base";
 
 describe("API INTEGRATOIN", () => {
   const oauthToken = "PVL2EGwJgYjwiWndR4SCfBTDUBsc0iGfuwlpV5D3G78";
