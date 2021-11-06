@@ -3,8 +3,8 @@ import { useRecoilState } from "recoil";
 import "./App.css";
 import {
   Activity,
+  allActivities,
   apiState,
-  localMyActivities,
   SyncStatus,
 } from "../state/myActivities";
 import { Frequency } from "../api/responseTypes";
@@ -12,7 +12,7 @@ import { OauthApi } from "../api/oauthApi";
 import { nullApi } from "../api/nullApi";
 
 export function ActivitiesForm(): JSX.Element {
-  const [activities, setActivities] = useRecoilState(localMyActivities);
+  const [activities, addNewActivity] = useRecoilState(allActivities);
   const [_, setApiState] = useRecoilState(apiState);
 
   const oauthTokenInput = useRef<HTMLInputElement>(null);
@@ -26,14 +26,16 @@ export function ActivitiesForm(): JSX.Element {
   };
 
   const createNewActivity = () => {
+    const name = nameInput.current?.value ?? "New Activity";
+
     const activity: Activity = {
       frequency: Frequency.DAILY,
-      uuid: "asdlkj", // todo make actual uuid here
-      name: nameInput.current?.value ?? "New Activity",
+      uuid: `asdlkj-${name}-${new Date().valueOf()}`, // todo make actual uuid here
+      name,
       status: SyncStatus.NEW,
     };
 
-    setActivities(activities.concat(activity));
+    addNewActivity([activity]);
   };
 
   return (
@@ -61,7 +63,11 @@ export function ActivitiesForm(): JSX.Element {
           </button>
           <div>
             {activities.map((a) => (
-              <div data-testid={`activity-${a.name}`} key={a.name}>
+              <div
+                data-testid={`activity-${a.name}`}
+                data-uuid={a.uuid}
+                key={a.uuid}
+              >
                 {a.name}
               </div>
             ))}

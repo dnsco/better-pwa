@@ -1,10 +1,10 @@
-import { snapshot_UNSTABLE as getSnapshot } from "recoil";
+import { MutableSnapshot, snapshot_UNSTABLE as getSnapshot } from "recoil";
 import {
   Activity,
+  allActivities,
   apiMyActivies,
   apiState,
-  localMyActivities,
-  mergedActivities,
+  myActivityIds,
   SyncStatus,
 } from "./myActivities";
 import { Api, ApiPromise, apiPromiseSuccess } from "../api/base";
@@ -16,22 +16,84 @@ const { NEW, SYNCED } = SyncStatus;
 describe("My Activity State", () => {
   const pikachu: Activity = {
     frequency: Frequency.DAILY,
-    uuid: "lolol",
+    uuid: "lolol-pika",
     name: "pikachu",
     status: NEW,
   };
 
-  const newPikachuSnapshot = getSnapshot().map((s) =>
-    s.set(localMyActivities, [pikachu])
-  );
+  describe("With remote activities", () => {
+    const mudkips: ApiActivity = {
+      ...pikachu,
+      uuid: "ALLO-ilurvmudkips",
+      name: "Mudkips",
+    };
 
-  describe("localActivityState", () => {
-    const localPikachu = newPikachuSnapshot
-      .getLoadable(localMyActivities)
+    const api: Api = {
+      ...nullApi,
+      myActivities(): ApiPromise<ApiActivity[]> {
+        return apiPromiseSuccess([mudkips]);
+      },
+    };
+
+    const makeSnapshot = () =>
+      getSnapshot()
+        .asyncMap((s) => {
+          s.set(apiState, api);
+          s.set(allActivities, [pikachu]);
+          s.retain();
+          return new Promise((resolve) => setTimeout(resolve, 100));
+        })
+        .then((s) =>
+          s.asyncMap((s) => {
+            s.retain();
+            return new Promise((resolve) => setTimeout(resolve, 100));
+          })
+        );
+
+    describe("apiMyActivities", () => {
+      it("has the api response", async () => {
+        const snapshot = await makeSnapshot();
+        const apiActivities = await snapshot
+          .getLoadable(apiMyActivies)
+          .toPromise();
+        expect(apiActivities.length).toEqual(1);
+        expect(apiActivities[0]?.name).toEqual("Mudkips");
+      });
+    });
+
+    describe("myActivityIds", () => {
+      it("Has both ids", async () => {
+        const snapshot = await makeSnapshot();
+
+        const activityIds = snapshot.getLoadable(myActivityIds).valueOrThrow();
+        expect(activityIds).toContain(pikachu.uuid);
+        expect(activityIds).toContain(mudkips.uuid);
+      });
+    });
+
+    describe("allActivities", () => {
+      it("merges local and api activities", async () => {
+        const snapshot = await makeSnapshot();
+
+        const activities = snapshot
+          .getLoadable(allActivities)
+          .getValue()
+          .map((a) => [a.name, a.status]);
+
+        expect(activities[0]).toEqual(["Mudkips", SYNCED]);
+        expect(activities[1]).toEqual(["pikachu", NEW]);
+      });
+    });
+  });
+
+  describe("creating an activity", () => {
+    const localPikachu = getSnapshot()
+      .map((s: MutableSnapshot) => s.set(allActivities, [pikachu]))
+      .getLoadable(allActivities)
       .valueOrThrow()
       .find((a) => a.name === "pikachu");
 
-    it("has a newPikachu", () => {
+    it("has locally created things", () => {
       expect(localPikachu?.status).toEqual(NEW);
     });
 
@@ -49,7 +111,7 @@ describe("My Activity State", () => {
 
       const state = getSnapshot().map((s) => {
         s.set(apiState, api);
-        s.set(localMyActivities, [pikachu]);
+        s.set(allActivities, [pikachu]);
         return s;
       });
 
@@ -58,7 +120,7 @@ describe("My Activity State", () => {
         //   // sleep until thing is done
         // }
         // onCreate.
-        const promise = state.getLoadable(localMyActivities).toPromise();
+        const promise = state.getLoadable(allActivities).toPromise();
 
         promise
           .then((activities) => {
@@ -71,43 +133,6 @@ describe("My Activity State", () => {
           })
           // eslint-disable-next-line no-console
           .catch((e) => console.error(e));
-      });
-    });
-  });
-
-  describe("With remote activities", () => {
-    const mudkips: ApiActivity = {
-      ...pikachu,
-      uuid: "ALLO",
-      name: "Mudkips",
-    };
-
-    const api: Api = {
-      ...nullApi,
-      myActivities(): ApiPromise<ApiActivity[]> {
-        return apiPromiseSuccess([mudkips]);
-      },
-    };
-
-    const state = newPikachuSnapshot.map((s) => s.set(apiState, api));
-
-    describe("apiActivities", () => {
-      it("returns the api's activities", async () => {
-        const activities = await state.getLoadable(apiMyActivies).toPromise();
-        expect(activities[0]?.name).toEqual("Mudkips");
-      });
-    });
-
-    describe("mergedActivities", () => {
-      it("merges local and new activities", async () => {
-        const allActivities = await state
-          .getLoadable(mergedActivities)
-          .promiseOrThrow();
-
-        expect(allActivities.map((a) => [a.name, a.status])).toEqual([
-          ["pikachu", NEW],
-          ["Mudkips", SYNCED],
-        ]);
       });
     });
   });
