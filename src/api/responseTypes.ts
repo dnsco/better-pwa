@@ -1,4 +1,5 @@
 export type UUID = string; // todo refine this
+
 export enum Frequency {
   DAILY = 7,
   EVERY_OTHER = 3.5,

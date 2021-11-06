@@ -9,7 +9,7 @@ import {
 } from "./myActivities";
 import { Api, ApiPromise, apiPromiseSuccess } from "../api/base";
 import { nullApi } from "../api/nullApi";
-import { ApiActivity, Frequency, UUID } from "../api/responseTypes";
+import { ApiActivity, Frequency } from "../api/responseTypes";
 
 const { NEW, SYNCED } = SyncStatus;
 
@@ -36,16 +36,14 @@ describe("My Activity State", () => {
     });
 
     describe("creating it remotely", () => {
-      // todo DO SOME CRAZY ATOM EFFECT BULLSHIT AND PUT A CREATE FUNCTION IN THE API!
+      const onCreate = jest.fn();
       const api: Api = {
         ...nullApi,
-        createActivity(
-          name: string,
-          uuid: UUID,
-          frequency: number
-        ): ApiPromise<ApiActivity> {
-          const activitiy: ApiActivity = { name, uuid, frequency };
-          return apiPromiseSuccess(activitiy);
+        createActivity(a: Activity): ApiPromise<ApiActivity> {
+          return apiPromiseSuccess(a).then((r) => {
+            onCreate();
+            return r;
+          });
         },
       };
 
@@ -55,14 +53,24 @@ describe("My Activity State", () => {
         return s;
       });
 
-      xit("sets the status to synced", async () => {
-        const activities = await state
-          .getLoadable(localMyActivities)
-          .toPromise();
+      xit("sets the status to synced", (done) => {
+        // while (onCreate.mock.calls.length === 0) {
+        //   // sleep until thing is done
+        // }
+        // onCreate.
+        const promise = state.getLoadable(localMyActivities).toPromise();
 
-        const activity = activities[0];
-        expect(activity?.name).toEqual("pikachu");
-        expect(activity?.status).toEqual(SYNCED);
+        promise
+          .then((activities) => {
+            const activity = activities[0];
+            // eslint-disable-next-line jest/no-conditional-expect
+            expect(activity?.name).toEqual("pikachu");
+            // eslint-disable-next-line jest/no-conditional-expect
+            expect(activity?.status).toEqual(SYNCED);
+            done();
+          })
+          // eslint-disable-next-line no-console
+          .catch((e) => console.error(e));
       });
     });
   });

@@ -1,12 +1,9 @@
-import { ApiActivity, UUID } from "./responseTypes";
+import { ApiActivity } from "./responseTypes";
+import { Activity } from "../state/myActivities";
 
 export interface Api {
   myActivities(): ApiPromise<ApiActivity[]>;
-  createActivity(
-    name: string,
-    uuid: UUID,
-    frequency: number
-  ): ApiPromise<ApiActivity>;
+  createActivity(activity: Activity): ApiPromise<ApiActivity>;
 }
 
 export enum ResponseKind {
