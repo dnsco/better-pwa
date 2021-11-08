@@ -1,5 +1,14 @@
-import { atom, AtomEffect, atomFamily, DefaultValue, selector } from "recoil";
+import {
+  atom,
+  AtomEffect,
+  atomFamily,
+  DefaultValue,
+  selector,
+  SetterOrUpdater,
+  useRecoilState,
+} from "recoil";
 import { recoilPersist } from "recoil-persist";
+import { v4 } from "uuid";
 import { Api, SUCCESS } from "../api/base";
 import { nullApi } from "../api/nullApi";
 import { ApiActivity, Frequency } from "../api/responseTypes";
@@ -20,7 +29,7 @@ export const apiState = atom<Api>({
   default: nullApi,
 });
 
-export const createActivity: AtomEffect<Activity[]> = ({
+export const createActivityEffect: AtomEffect<Activity[]> = ({
   onSet,
   setSelf,
   getLoadable,
@@ -70,8 +79,8 @@ const mergeLocalAndRemote: AtomEffect<Activity> = (params) => {
     const value = getLoadable(node).getValue();
     if (value.status !== SyncStatus.SYNCED) {
       const remote = getLoadable(apiMyActivies)
-        .valueOrThrow()
-        .find((a) => a.uuid === value.uuid);
+        .valueMaybe()
+        ?.find((a) => a.uuid === value.uuid);
 
       if (remote) {
         setSelf({ ...remote, status: SyncStatus.SYNCED });
@@ -98,17 +107,6 @@ const myActivities = atomFamily<Activity, string>({
   },
   effects_UNSTABLE: [mergeLocalAndRemote, persistAtom],
 });
-
-// const _wat = {
-//   async({ get }) {
-//     const localActs = get(localMyActivities);
-//     const apiActs = get(apiMyActivies);
-//
-//     return localActs.concat(
-//       apiActs.map((a) => ({ ...a, status: SyncStatus.SYNCED }))
-//     );
-//   },
-// };
 
 export const allActivities = selector<Activity[]>({
   key: "allActivities",
@@ -149,3 +147,26 @@ export const apiMyActivies = selector<ApiActivity[]>({
     return resp.kind === SUCCESS ? resp.data : [];
   },
 });
+
+export type CreateActivityProps = Omit<Activity, "uuid" | "status">;
+type ActivityFactory = (activity: CreateActivityProps) => void;
+export type UseMyActivitiesResult = [Activity[], ActivityFactory];
+
+function createActivityFactory(
+  setActivities: SetterOrUpdater<Activity[]>
+): ActivityFactory {
+  return (props) => {
+    const activity: Activity = {
+      ...props,
+      uuid: v4(),
+      status: SyncStatus.NEW,
+    };
+    setActivities([activity]);
+  };
+}
+
+export const useMyActivities = (): UseMyActivitiesResult => {
+  const [activities, setActivities] = useRecoilState(allActivities);
+
+  return [activities, createActivityFactory(setActivities)];
+};

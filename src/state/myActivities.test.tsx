@@ -1,11 +1,21 @@
-import { MutableSnapshot, snapshot_UNSTABLE as getSnapshot } from "recoil";
+import {
+  MutableSnapshot,
+  RecoilRoot,
+  snapshot_UNSTABLE as getSnapshot,
+} from "recoil";
+import { act, renderHook } from "@testing-library/react-hooks";
+// import { act } from "@testing-library/react";
+import React from "react";
 import {
   Activity,
   allActivities,
   apiMyActivies,
   apiState,
+  CreateActivityProps,
   myActivityIds,
   SyncStatus,
+  useMyActivities,
+  UseMyActivitiesResult,
 } from "./myActivities";
 import { Api, ApiPromise, apiPromiseSuccess } from "../api/base";
 import { nullApi } from "../api/nullApi";
@@ -13,6 +23,65 @@ import { ApiActivity, Frequency } from "../api/responseTypes";
 
 const { NEW, SYNCED } = SyncStatus;
 
+describe("useMyActivitities", () => {
+  let api: Api = { ...nullApi };
+  const activityProps: CreateActivityProps = {
+    name: "LOLOLOL",
+    frequency: Frequency.DAILY,
+  };
+
+  function makeHookRenderer(
+    stateFactory?: (s: MutableSnapshot) => void
+  ): () => Promise<UseMyActivitiesResult> {
+    return async () => {
+      let res: UseMyActivitiesResult | undefined;
+
+      await act(async () => {
+        const { result } = renderHook(useMyActivities, {
+          wrapper: ({ children }) => (
+            <RecoilRoot initializeState={stateFactory}>{children}</RecoilRoot>
+          ),
+        });
+
+        await new Promise((res) => setImmediate(res));
+        expect(result.error).toBeUndefined();
+        res = result.current;
+      });
+
+      if (!res) throw new Error("Did not set hook result");
+      return res;
+    };
+  }
+
+  describe("When the api Has not yet responded with activities", () => {
+    let stateFactory: (s: MutableSnapshot) => void | undefined;
+    beforeEach(() => {
+      api = {
+        ...nullApi,
+        myActivities(): ApiPromise<ApiActivity[]> {
+          return new Promise((_) => {
+            // pending
+          });
+        },
+      };
+      stateFactory = (s) => s.set(apiState, api);
+    });
+
+    it("Adds Activities to a list", async () => {
+      const getState = makeHookRenderer(stateFactory);
+      let [activities, createActivity] = await getState();
+      expect(activities.length).toEqual(0);
+
+      act(() => createActivity({ ...activityProps, name: "first" }));
+      [activities, createActivity] = await getState();
+      expect(activities).toHaveLength(1);
+
+      act(() => createActivity({ ...activityProps, name: "second" }));
+      [activities] = await getState();
+      expect(activities).toHaveLength(2);
+    });
+  });
+});
 describe("My Activity State", () => {
   const pikachu: Activity = {
     frequency: Frequency.DAILY,
@@ -44,8 +113,8 @@ describe("My Activity State", () => {
           return new Promise((resolve) => setTimeout(resolve, 100));
         })
         .then((s) =>
-          s.asyncMap((s) => {
-            s.retain();
+          s.asyncMap((s2) => {
+            s2.retain();
             return new Promise((resolve) => setTimeout(resolve, 100));
           })
         );
