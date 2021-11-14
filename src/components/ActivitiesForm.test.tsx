@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { RecoilRoot } from "recoil";
 import { act } from "react-dom/test-utils";
 import { ActivitiesForm } from "./ActivitiesForm";
-import { Activity } from "../state/myActivities";
+import { Activity } from "../state/activity";
 
 describe("THE APP", () => {
   async function renderAndCreateActivity() {
@@ -20,6 +20,10 @@ describe("THE APP", () => {
       return Promise.resolve();
     });
   }
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
 
   it("adds the newly created activity to the page", async () => {
     await renderAndCreateActivity();

@@ -1,18 +1,14 @@
 import React, { useRef } from "react";
 import { useRecoilState } from "recoil";
 import "./App.css";
-import {
-  Activity,
-  allActivities,
-  apiState,
-  SyncStatus,
-} from "../state/myActivities";
 import { Frequency } from "../api/responseTypes";
 import { OauthApi } from "../api/oauthApi";
 import { nullApi } from "../api/nullApi";
+import { apiState } from "../state/api";
+import { useMyActivities } from "../state/useMyActivities";
 
 export function ActivitiesForm(): JSX.Element {
-  const [activities, addNewActivity] = useRecoilState(allActivities);
+  const [activities, addNewActivity] = useMyActivities();
   const [_, setApiState] = useRecoilState(apiState);
 
   const oauthTokenInput = useRef<HTMLInputElement>(null);
@@ -26,16 +22,10 @@ export function ActivitiesForm(): JSX.Element {
   };
 
   const createNewActivity = () => {
-    const name = nameInput.current?.value ?? "New Activity";
-
-    const activity: Activity = {
+    addNewActivity({
+      name: nameInput.current?.value ?? "New Activity",
       frequency: Frequency.DAILY,
-      uuid: `asdlkj-${name}-${new Date().valueOf()}`, // todo make actual uuid here
-      name,
-      status: SyncStatus.NEW,
-    };
-
-    addNewActivity([activity]);
+    });
   };
 
   return (

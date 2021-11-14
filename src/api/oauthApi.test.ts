@@ -1,8 +1,8 @@
 import { v4 } from "uuid";
 import { OauthApi } from "./oauthApi";
 import { ERROR } from "./base";
-import { Activity, SyncStatus } from "../state/myActivities";
 import { Frequency } from "./responseTypes";
+import { Activity, SyncStatus } from "../state/activity";
 
 describe.skip("API INTEGRATOIN", () => {
   const oauthToken = "PVL2EGwJgYjwiWndR4SCfBTDUBsc0iGfuwlpV5D3G78";

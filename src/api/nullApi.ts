@@ -1,6 +1,6 @@
 import { Api, ApiPromise, apiPromiseSuccess } from "./base";
 import { ApiActivity, Frequency } from "./responseTypes";
-import { Activity, SyncStatus } from "../state/myActivities";
+import { Activity, SyncStatus } from "../state/activity";
 
 function newActivity(name: string): Activity {
   return {
