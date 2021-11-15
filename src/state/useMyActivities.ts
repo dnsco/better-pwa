@@ -7,6 +7,7 @@ import {
   selector,
   selectorFamily,
   useRecoilState,
+  useRecoilTransaction_UNSTABLE,
   useRecoilValue,
 } from "recoil";
 import { useEffect, useMemo } from "react";
@@ -39,34 +40,38 @@ const useActivitiesAndFactory = (): UseMyActivitiesResult => {
 };
 
 const useMergeApiActivities = () => {
-  const [localActivities, setActivity] = useRecoilState(allActivities);
-  const [currentIds, setIds] = useRecoilState(storedIds);
-
+  useMergeLocalAndSyncedIds();
   const mergedActivities = useRecoilValue(allMerged);
-  const allIds = useRecoilValue(allMyIds);
 
+  const transaction = useRecoilTransaction_UNSTABLE(
+    ({ set, get }) =>
+      () => {
+        mergedActivities.forEach((merged) => {
+          const storedAtom = storedActivities(merged.uuid);
+
+          if (JSON.stringify(merged) !== JSON.stringify(get(storedAtom))) {
+            set(storedAtom, merged);
+          }
+        });
+      },
+    [mergedActivities]
+  );
+
+  useEffect(transaction);
+};
+
+/** Adds remote item ids to the locally-stored ids
+ *
+ * must be in a react effect, because recoil atom effects cannot subscribe to selectors (allMyIds)
+ */
+const useMergeLocalAndSyncedIds = () => {
+  const [currentIds, setIds] = useRecoilState(storedIds);
+  const allIds = useRecoilValue(allMyIds);
   useEffect(() => {
-    // Adds remote items to the ids
-    // must be in a react effect, because recoil atom effects cannot subscribe to selectors (allMyIds)
     if (JSON.stringify(allIds) !== JSON.stringify(currentIds)) {
       setIds(allIds);
     }
-
-    mergedActivities.forEach((merged) => {
-      const local = localActivities.find((a) => a.uuid === merged.uuid);
-
-      if (JSON.stringify(merged) !== JSON.stringify(local)) {
-        setActivity([merged]);
-      }
-    });
-  }, [
-    allIds,
-    currentIds,
-    setIds,
-    localActivities,
-    mergedActivities,
-    setActivity,
-  ]);
+  }, [allIds, currentIds]);
 };
 
 const mergedLocalAndSynced = selectorFamily<Activity | null, UUID>({
