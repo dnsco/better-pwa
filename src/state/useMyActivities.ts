@@ -15,8 +15,9 @@ import {
   createActivityFactory,
   SyncStatus,
 } from "./activity";
-import { apiMyActivities, apiMyActivitity } from "./api";
+import { apiMyActivities, apiMyActivitity, apiState } from "./api";
 import { UUID } from "../api/responseTypes";
+import { SUCCESS } from "../api/base";
 
 const { persistAtom } = recoilPersist();
 
@@ -69,13 +70,13 @@ const myActivities = atomFamily<Activity | null, UUID>({
   key: "myActivities",
   default: null,
   effects_UNSTABLE: (uuid): AtomEffect<Activity | null>[] => {
-    return [mergeRemote(uuid), persistAtom];
+    return [persistAtom, mergeRemote(uuid)];
   },
 });
 
 const mergeRemote: (uuid: UUID) => AtomEffect<Activity | null> =
   (uuid: UUID) =>
-  ({ trigger, setSelf, getLoadable }) => {
+  ({ trigger, setSelf, getLoadable, onSet }) => {
     if (trigger === "get") {
       // const currentValue = getLoadable(node)
       const loadable = getLoadable(apiMyActivitity(uuid));
@@ -85,6 +86,18 @@ const mergeRemote: (uuid: UUID) => AtomEffect<Activity | null> =
       const synced = { ...remote, status: SyncStatus.SYNCED };
       setSelf(synced);
     }
+    onSet((newValue) => {
+      // if oldValue === null && newValue.state === NEW
+      const api = getLoadable(apiState).valueOrThrow();
+
+      if (newValue) {
+        api.createActivity(newValue).then((resp) => {
+          if (resp.kind === SUCCESS) {
+            setSelf({ ...newValue, ...resp.data, status: SyncStatus.SYNCED });
+          }
+        });
+      }
+    });
   };
 
 /** Private selector to expose all activities

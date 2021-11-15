@@ -3,7 +3,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { RecoilRoot } from "recoil";
 import { act } from "react-dom/test-utils";
 import { ActivitiesForm } from "./ActivitiesForm";
-import { Activity } from "../state/activity";
 
 describe("THE APP", () => {
   async function renderAndCreateActivity() {
@@ -42,24 +41,4 @@ describe("THE APP", () => {
     expect(screen.getByTestId("activity-NewActivity2")).toBeInTheDocument();
     expect(screen.getByTestId("activity-NewActivity1")).toBeInTheDocument();
   });
-
-  it("persists the activities to local storage", async () => {
-    await renderAndCreateActivity();
-
-    const node = screen.getByTestId("activity-NewActivity1");
-    const uuid = node.getAttribute("data-uuid");
-    if (!uuid) throw Error(`Couldn't get uuid off of ${node}`);
-
-    expect(itemInLocalStorage(uuid).name).toBe("NewActivity1");
-  });
-
-  function itemInLocalStorage(uuid: string): Activity {
-    const storageMap = JSON.parse(
-      localStorage.getItem("recoil-persist") || "{}"
-    );
-
-    const activity = storageMap[`myActivities__"${uuid}"`];
-    if (!activity) throw new Error(`Failed to find activity with key${uuid}`);
-    return activity;
-  }
 });

@@ -2,6 +2,8 @@ import { Api, ApiPromise, apiPromiseSuccess } from "./base";
 import { ApiActivity, Frequency } from "./responseTypes";
 import { Activity, SyncStatus } from "../state/activity";
 
+const NOOP = () => {}; // eslint-disable-line @typescript-eslint/no-empty-function
+
 function newActivity(name: string): Activity {
   return {
     frequency: Frequency.DAILY,
@@ -16,10 +18,7 @@ export const nullApi: Api = {
     return apiPromiseSuccess([newActivity("Think"), newActivity("Live")]);
   },
 
-  createActivity(a: Activity): ApiPromise<ApiActivity> {
-    return apiPromiseSuccess({
-      ...a,
-      status: SyncStatus.SYNCED,
-    });
+  createActivity(_: Activity): ApiPromise<ApiActivity> {
+    return new Promise(NOOP);
   },
 };

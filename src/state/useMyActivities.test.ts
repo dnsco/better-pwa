@@ -17,7 +17,7 @@ function contextWithApi(api: Api): RecoilHookRenderer {
   return recoilHookRenderContext((s) => s.set(apiState, api));
 }
 
-describe("useMyActivitities", () => {
+describe("useMyActivities", () => {
   const activityProps: CreateActivityProps = {
     name: "LOLOLOL",
     frequency: Frequency.DAILY,
@@ -62,47 +62,44 @@ describe("useMyActivitities", () => {
     });
   });
 
-  xdescribe("remote activity creation", () => {
-    const makeTestContext = (): [RecoilHookRenderer, jest.Mock] => {
-      const onCreate = jest.fn();
-      const recoilHookRenderer = contextWithApi({
+  describe("remote activity creation", () => {
+    const makeTestContext = (): RecoilHookRenderer =>
+      contextWithApi({
         ...nullApi,
         createActivity(a: Activity): ApiPromise<ApiActivity> {
-          return apiPromiseSuccess(a).then((r) => {
-            onCreate();
-            return r;
-          });
+          return apiPromiseSuccess(a);
         },
       });
-      return [recoilHookRenderer, onCreate];
-    };
 
-    xit("sets the status to synced", (done) => {
+    it("syncs with the API", async () => {
       // waitFor(() => onCreate.mock.calls.length > 1);
-      const _ = makeTestContext();
-      const promise: Promise<Activity[]> = Promise.resolve([]);
-      promise
-        .then((activities) => {
-          const activity = activities[0];
-          // eslint-disable-next-line jest/no-conditional-expect
-          expect(activity?.name).toEqual("pikachu");
-          // eslint-disable-next-line jest/no-conditional-expect
-          expect(activity?.status).toEqual(SYNCED);
-          done();
-        })
-        // eslint-disable-next-line no-console
-        .catch((e) => console.error(e));
+      const { getCurrentValue } = makeTestContext();
+      const [_, create] = await getCurrentValue(useMyActivities);
+      act(() => create({ frequency: Frequency.DAILY, name: "love" }));
+      const [activities] = await getCurrentValue(useMyActivities);
+      const love = activityFromLocalStorage("love", activities);
+      expect(love?.status).toEqual(SYNCED);
     });
   });
 
   describe("when the api has responded with activities", () => {
-    const makeTestContext = (): RecoilHookRenderer =>
-      contextWithApi({
+    const setupTestContext = async (): Promise<RecoilHookRenderer> => {
+      const renderer = contextWithApi({
         ...nullApi,
         myActivities(): ApiPromise<ApiActivity[]> {
           return apiPromiseSuccess([apiMudkips]);
         },
       });
+
+      const { getCurrentValue } = renderer;
+      const [_, create] = await getCurrentValue(useMyActivities);
+
+      await act(async () => {
+        create({ frequency: Frequency.DAILY, name: "pikachu" });
+      });
+
+      return renderer;
+    };
 
     const apiMudkips: ApiActivity = {
       frequency: Frequency.DAILY,
@@ -110,22 +107,58 @@ describe("useMyActivitities", () => {
       name: "Mudkips",
     };
 
-    it("merges local and api activities", async () => {
-      const { getCurrentValue } = makeTestContext();
-      const [_, create] = await getCurrentValue(useMyActivities);
-
-      await act(async () => {
-        create({ frequency: Frequency.DAILY, name: "pikachu" });
-      });
-
+    it("is a collection of local and remote activiites", async () => {
+      const { getCurrentValue } = await setupTestContext();
       const [activities] = await getCurrentValue(useMyActivities);
       expect(activities).toHaveLength(2);
+      expect(activityNamed("pikachu", activities).status).toEqual(NEW);
+      expect(activityNamed("Mudkips", activities).status).toEqual(SYNCED);
+    });
 
-      const [local, synced] = activities as [Activity, Activity];
-      expect(local.name).toEqual("pikachu");
-      expect(local.status).toEqual(NEW);
+    xit("perists the merged versions to local storage", async () => {
+      const { getCurrentValue } = await setupTestContext();
+      const [activities] = await getCurrentValue(useMyActivities);
+
+      const pikachu = activityFromLocalStorage("pikachu", activities);
+      expect(pikachu.name).toEqual("pikachu");
+      expect(pikachu.status).toEqual(NEW);
+
+      const synced = activityFromLocalStorage("Mudkips", activities);
       expect(synced.name).toEqual("Mudkips");
       expect(synced.status).toEqual(SYNCED);
     });
   });
+
+  const activityFromLocalStorage = (
+    name: string,
+    activities: Activity[]
+  ): Activity => {
+    const activity = activityNamed(name, activities);
+    const storageMap = JSON.parse(
+      localStorage.getItem("recoil-persist") || "{}"
+    );
+
+    const fromStorage: Activity | undefined =
+      storageMap[`myActivities__"${activity.uuid}"`];
+
+    if (!fromStorage)
+      throw new Error(
+        `Not found in local Storage– Activity: ${JSON.stringify(activity)}`
+      );
+
+    return fromStorage;
+  };
+
+  function activityNamed(name: string, activities: Activity[]): Activity {
+    const filtered = activities.filter((a) => a.name === name);
+
+    if (filtered.length !== 1) {
+      const s = JSON.stringify(activities);
+      throw new Error(
+        `There is not exactly one activity named "${name}" in ${s}`
+      );
+    }
+
+    return (filtered as [Activity])[0];
+  }
 });
