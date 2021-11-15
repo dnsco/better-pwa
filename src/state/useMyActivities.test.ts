@@ -115,7 +115,7 @@ describe("useMyActivities", () => {
       expect(activityNamed("Mudkips", activities).status).toEqual(SYNCED);
     });
 
-    xit("perists the merged versions to local storage", async () => {
+    it("perists the merged versions to local storage", async () => {
       const { getCurrentValue } = await setupTestContext();
       const [activities] = await getCurrentValue(useMyActivities);
 

@@ -3,9 +3,11 @@ import {
   AtomEffect,
   atomFamily,
   DefaultValue,
+  noWait,
   selector,
+  selectorFamily,
   useRecoilState,
-  useRecoilValueLoadable,
+  useRecoilValue,
 } from "recoil";
 import { useEffect, useMemo } from "react";
 import { recoilPersist } from "recoil-persist";
@@ -37,59 +39,101 @@ const useActivitiesAndFactory = (): UseMyActivitiesResult => {
 };
 
 const useMergeApiActivities = () => {
-  const apiActivities = useRecoilValueLoadable(apiMyActivities).valueMaybe();
-  const [currentIds, setIds] = useRecoilState(myActivityIds);
+  const [localActivities, setActivity] = useRecoilState(allActivities);
+  const [currentIds, setIds] = useRecoilState(storedIds);
+
+  const mergedActivities = useRecoilValue(allMerged);
+  const allIds = useRecoilValue(allMyIds);
 
   useEffect(() => {
-    const apiIds = (apiActivities || []).map((a) => a.uuid);
-    const allIds = Array.from(new Set([...apiIds, ...currentIds])).sort();
-
+    // Adds remote items to the ids
+    // must be in a react effect, because recoil atom effects cannot subscribe to selectors (allMyIds)
     if (JSON.stringify(allIds) !== JSON.stringify(currentIds)) {
       setIds(allIds);
     }
-  }, [apiActivities, currentIds, setIds]);
+
+    mergedActivities.forEach((merged) => {
+      const local = localActivities.find((a) => a.uuid === merged.uuid);
+
+      if (JSON.stringify(merged) !== JSON.stringify(local)) {
+        setActivity([merged]);
+      }
+    });
+  }, [
+    allIds,
+    currentIds,
+    setIds,
+    localActivities,
+    mergedActivities,
+    setActivity,
+  ]);
 };
 
+const mergedLocalAndSynced = selectorFamily<Activity | null, UUID>({
+  key: "mergedActivities",
+  get: (uuid) => {
+    return ({ get }) => {
+      const local = get(storedActivities(uuid));
+      let api: Activity | null = null;
+      const loadable = get(noWait(apiMyActivitity(uuid)));
+      if (loadable.state === "hasValue") api = loadable.valueMaybe();
+
+      if (local && api) {
+        return { ...local, ...api } as Activity;
+      }
+
+      return local || api;
+    };
+  },
+});
+
+const allMerged = selector<Activity[]>({
+  key: "allmergedActivities",
+  get: ({ get }) =>
+    get(allMyIds)
+      .map((uuid) => get(mergedLocalAndSynced(uuid)))
+      .filter(Boolean) as Activity[],
+});
+
+const allMyIds = selector<UUID[]>({
+  key: "allMyIds",
+  get: ({ get }) => {
+    const apiIds: UUID[] = (
+      get(noWait(apiMyActivities)).valueMaybe() ?? []
+    ).map((a) => a.uuid);
+    return Array.from(new Set([...apiIds, ...get(storedIds)])).sort();
+  },
+});
 /** Private atom to track ids
  *  used and managed by allActivities to return an array of all items
  *  items are inserted by set (create) allActivities
  *
  */
-const myActivityIds = atom<string[]>({
+const storedIds = atom<UUID[]>({
   key: "localActivityIds",
   default: [],
   effects_UNSTABLE: [persistAtom],
 });
 
 /** Private atom family that actually stores the activity data
- * keys are held in myActivityIds
+ * keys are held in storedIds
  * collection is managed by allActivities
  */
 
-const myActivities = atomFamily<Activity | null, UUID>({
+const storedActivities = atomFamily<Activity | null, UUID>({
   key: "myActivities",
   default: null,
   effects_UNSTABLE: (uuid): AtomEffect<Activity | null>[] => {
-    return [persistAtom, mergeRemote(uuid)];
+    return [persistAtom, createNew(uuid)];
   },
 });
 
-const mergeRemote: (uuid: UUID) => AtomEffect<Activity | null> =
-  (uuid: UUID) =>
-  ({ trigger, setSelf, getLoadable, onSet }) => {
-    if (trigger === "get") {
-      // const currentValue = getLoadable(node)
-      const loadable = getLoadable(apiMyActivitity(uuid));
-      const remote = loadable.valueMaybe();
-      if (!remote) return;
-      // todo be better with merging here.
-      const synced = { ...remote, status: SyncStatus.SYNCED };
-      setSelf(synced);
-    }
+const createNew: (uuid: UUID) => AtomEffect<Activity | null> =
+  (_: UUID) =>
+  ({ setSelf, getLoadable, onSet }) => {
     onSet((newValue) => {
       // if oldValue === null && newValue.state === NEW
       const api = getLoadable(apiState).valueOrThrow();
-
       if (newValue) {
         api.createActivity(newValue).then((resp) => {
           if (resp.kind === SUCCESS) {
@@ -108,15 +152,15 @@ const mergeRemote: (uuid: UUID) => AtomEffect<Activity | null> =
 const allActivities = selector<Activity[]>({
   key: "allActivities",
   get: ({ get }) =>
-    get(myActivityIds)
-      .map((uuid) => get(myActivities(uuid)))
+    get(allMyIds)
+      .map((uuid) => get(storedActivities(uuid)))
       .filter(Boolean) as Activity[],
-  set: ({ set, get }, newActivityWrapped) => {
+  set: ({ get, set }, newActivityWrapped) => {
     if (newActivityWrapped instanceof DefaultValue) return;
     if (newActivityWrapped.length !== 1) return;
     const [newActivity] = newActivityWrapped as [Activity];
-    const ids = get(myActivityIds);
-    set(myActivityIds, [...ids, newActivity.uuid]);
-    set(myActivities(newActivity.uuid), newActivity);
+    const ids = get(allMyIds);
+    set(storedIds, Array.from(new Set([...ids, newActivity.uuid])).sort());
+    set(storedActivities(newActivity.uuid), newActivity);
   },
 });
