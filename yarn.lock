@@ -9398,10 +9398,10 @@ recoil-persist@^3.0.0:
   resolved "https://registry.yarnpkg.com/recoil-persist/-/recoil-persist-3.0.0.tgz#30f8fb5d62a4a0e3d660b07dcb75cbb4a0bcab24"
   integrity sha512-ZQB/U26uLdm2bDPh9HR44WamHz30XUD0cqAUnqSDuIKRTHsyjqccJ3ThXfoFYnG9QpOUcPSve6ElHseVll2g+w==
 
-recoil-test-render-hooks@^0.4.0-next.2:
-  version "0.4.0-next.2"
-  resolved "https://registry.yarnpkg.com/recoil-test-render-hooks/-/recoil-test-render-hooks-0.4.0-next.2.tgz#fc81739f6dd1cd3696716907a760c3c4e94c531c"
-  integrity sha512-bnwfbN/cP9ivCM4MD/jBGQahe+Y8Ftsj8GA3TOSsRZUxoUL3XfW0URyfoI3A6N7dENGdVa3I5M4467KpaSjAmQ==
+recoil-test-render-hooks@^0.5.0-next.2:
+  version "0.5.0-next.2"
+  resolved "https://registry.yarnpkg.com/recoil-test-render-hooks/-/recoil-test-render-hooks-0.5.0-next.2.tgz#f9fd4dfc6c71582a595487743ef67dd213e91abe"
+  integrity sha512-u+7HHfjfe+BzAXd7/DQ9DQ/nvjXI+TtUYqrXdMlEPMXWsZULTeCjoEb1I6NA9SkiZB34q3x++XCRD84Xc9eohQ==
   dependencies:
     "@testing-library/react-hooks" "^7.0.2"
     tslib "^2.3.1"
