@@ -18,7 +18,7 @@ import {
   SyncStatus,
 } from "./activity";
 import { apiMyActivities, apiState } from "./api";
-import { UUID } from "../api/responseTypes";
+import { Frequency, UUID } from "../api/responseTypes";
 import { SUCCESS } from "../api/base";
 
 const { persistAtom } = recoilPersist();
@@ -38,62 +38,36 @@ const useActivitiesAndFactory = (): UseMyActivitiesResult => {
   );
 };
 
+/**
+ * Sync remote activities with the local store.
+ * must be in a react effect, because recoil atom effects cannot subscribe to selectors (allMyIds)
+ */
 const useMergeApiActivities = () => {
-  useMergeLocalAndSyncedIds();
   const ids = useRecoilValue(allMyIds);
-  const loadable = useRecoilValue(noWait(apiMyActivities));
+  const apiLoadable = useRecoilValue(noWait(apiMyActivities));
 
   const transaction = useRecoilTransaction(
     ({ set, get }) =>
       () => {
-        if (loadable.state === "hasValue") {
-          const apiActs = loadable.valueOrThrow();
-          const mergedActivities = ids
-            .map((uuid): Activity | null | undefined => {
-              const local = get(storedActivities(uuid));
-              const api = apiActs.find((a) => a.uuid === uuid);
+        if (apiLoadable.state !== "hasValue") return;
+        apiLoadable.valueOrThrow().forEach((api) => {
+          const storedAtom = storedActivities(api.uuid);
+          const local = get(storedAtom);
+          const merged: Activity = {
+            ...local,
+            ...api,
+            status: SyncStatus.SYNCED,
+          } as Activity;
 
-              if (local && api) {
-                return {
-                  ...local,
-                  ...api,
-                  status: SyncStatus.SYNCED,
-                } as Activity;
-              }
-
-              return (
-                local || (api ? { ...api, status: SyncStatus.SYNCED } : null)
-              );
-            })
-            .filter(Boolean) as Activity[];
-
-          mergedActivities.forEach((merged) => {
-            const storedAtom = storedActivities(merged.uuid);
-
-            if (JSON.stringify(merged) !== JSON.stringify(get(storedAtom))) {
-              set(storedAtom, merged);
-            }
-          });
-        }
+          if (JSON.stringify(merged) !== JSON.stringify(local)) {
+            set(storedAtom, merged);
+          }
+        });
       },
-    [ids, loadable]
+    [ids, apiLoadable]
   );
 
   useEffect(transaction);
-};
-
-/** Adds remote item ids to the locally-stored ids
- *
- * must be in a react effect, because recoil atom effects cannot subscribe to selectors (allMyIds)
- */
-const useMergeLocalAndSyncedIds = () => {
-  const [currentIds, setIds] = useRecoilState(storedIds);
-  const allIds = useRecoilValue(allMyIds);
-  useEffect(() => {
-    if (JSON.stringify(allIds) !== JSON.stringify(currentIds)) {
-      setIds(allIds);
-    }
-  }, [allIds, currentIds, setIds]);
 };
 
 const allMyIds = selector<UUID[]>({
@@ -116,32 +90,37 @@ const storedIds = atom<UUID[]>({
   effects_UNSTABLE: [persistAtom],
 });
 
+const DEFAULT_ACTIVITY: Activity = {
+  frequency: Frequency.DAILY,
+  name: "New Default",
+  status: SyncStatus.SYNCED,
+  uuid: "",
+};
+
 /** Private atom family that actually stores the activity data
  * keys are held in storedIds
  * collection is managed by allActivities
  */
-
-const storedActivities = atomFamily<Activity | null, UUID>({
+const storedActivities = atomFamily<Activity, UUID>({
   key: "myActivities",
-  default: null,
-  effects_UNSTABLE: (uuid): AtomEffect<Activity | null>[] => {
+  default: DEFAULT_ACTIVITY,
+  effects_UNSTABLE: (uuid): AtomEffect<Activity>[] => {
     return [persistAtom, createNew(uuid)];
   },
 });
 
-const createNew: (uuid: UUID) => AtomEffect<Activity | null> =
+const createNew: (uuid: UUID) => AtomEffect<Activity> =
   (_: UUID) =>
   ({ setSelf, getLoadable, onSet }) => {
     onSet((newValue) => {
       // if oldValue === null && newValue.state === NEW
       const api = getLoadable(apiState).valueOrThrow();
-      if (newValue) {
-        api.createActivity(newValue).then((resp) => {
-          if (resp.kind === SUCCESS) {
-            setSelf({ ...newValue, ...resp.data, status: SyncStatus.SYNCED });
-          }
-        });
-      }
+
+      api.createActivity(newValue).then((resp) => {
+        if (resp.kind === SUCCESS) {
+          setSelf({ ...newValue, ...resp.data, status: SyncStatus.SYNCED });
+        }
+      });
     });
   };
 
@@ -152,10 +131,7 @@ const createNew: (uuid: UUID) => AtomEffect<Activity | null> =
 
 const allActivities = selector<Activity[]>({
   key: "allActivities",
-  get: ({ get }) =>
-    get(allMyIds)
-      .map((uuid) => get(storedActivities(uuid)))
-      .filter(Boolean) as Activity[],
+  get: ({ get }) => get(allMyIds).map((uuid) => get(storedActivities(uuid))),
   set: ({ get, set }, newActivityWrapped) => {
     if (newActivityWrapped instanceof DefaultValue) return;
     if (newActivityWrapped.length !== 1) return;
