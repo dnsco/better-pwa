@@ -1,8 +1,7 @@
-import { atom, selector, selectorFamily } from "recoil";
-import { ApiActivity, UUID } from "../api/responseTypes";
+import { atom, selector } from "recoil";
+import { ApiActivity } from "../api/responseTypes";
 import { Api, SUCCESS } from "../api/base";
 import { nullApi } from "../api/nullApi";
-import { Activity, SyncStatus } from "./activity";
 
 const FIVE_MINUTES = 300000;
 
@@ -20,16 +19,6 @@ export const apiMyActivities = selector<ApiActivity[]>({
     const resp = await api.myActivities();
     return resp.kind === SUCCESS ? resp.data : [];
   },
-});
-
-export const apiMyActivitity = selectorFamily<Activity | null, UUID>({
-  key: "apiMyActivity",
-  get:
-    (uuid) =>
-    ({ get }) => {
-      const api = get(apiMyActivities).find((a) => a.uuid === uuid);
-      return api ? { ...api, status: SyncStatus.SYNCED } : null;
-    },
 });
 
 export const shouldFetchOwnActivitiesAt = atom<Date>({

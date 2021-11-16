@@ -5,9 +5,8 @@ import {
   DefaultValue,
   noWait,
   selector,
-  selectorFamily,
   useRecoilState,
-  useRecoilTransaction_UNSTABLE,
+  useRecoilTransaction_UNSTABLE as useRecoilTransaction,
   useRecoilValue,
 } from "recoil";
 import { useEffect, useMemo } from "react";
@@ -18,7 +17,7 @@ import {
   createActivityFactory,
   SyncStatus,
 } from "./activity";
-import { apiMyActivities, apiMyActivitity, apiState } from "./api";
+import { apiMyActivities, apiState } from "./api";
 import { UUID } from "../api/responseTypes";
 import { SUCCESS } from "../api/base";
 
@@ -41,20 +40,43 @@ const useActivitiesAndFactory = (): UseMyActivitiesResult => {
 
 const useMergeApiActivities = () => {
   useMergeLocalAndSyncedIds();
-  const mergedActivities = useRecoilValue(allMerged);
+  const ids = useRecoilValue(allMyIds);
+  const loadable = useRecoilValue(noWait(apiMyActivities));
 
-  const transaction = useRecoilTransaction_UNSTABLE(
+  const transaction = useRecoilTransaction(
     ({ set, get }) =>
       () => {
-        mergedActivities.forEach((merged) => {
-          const storedAtom = storedActivities(merged.uuid);
+        if (loadable.state === "hasValue") {
+          const apiActs = loadable.valueOrThrow();
+          const mergedActivities = ids
+            .map((uuid): Activity | null | undefined => {
+              const local = get(storedActivities(uuid));
+              const api = apiActs.find((a) => a.uuid === uuid);
 
-          if (JSON.stringify(merged) !== JSON.stringify(get(storedAtom))) {
-            set(storedAtom, merged);
-          }
-        });
+              if (local && api) {
+                return {
+                  ...local,
+                  ...api,
+                  status: SyncStatus.SYNCED,
+                } as Activity;
+              }
+
+              return (
+                local || (api ? { ...api, status: SyncStatus.SYNCED } : null)
+              );
+            })
+            .filter(Boolean) as Activity[];
+
+          mergedActivities.forEach((merged) => {
+            const storedAtom = storedActivities(merged.uuid);
+
+            if (JSON.stringify(merged) !== JSON.stringify(get(storedAtom))) {
+              set(storedAtom, merged);
+            }
+          });
+        }
       },
-    [mergedActivities]
+    [ids, loadable]
   );
 
   useEffect(transaction);
@@ -71,34 +93,8 @@ const useMergeLocalAndSyncedIds = () => {
     if (JSON.stringify(allIds) !== JSON.stringify(currentIds)) {
       setIds(allIds);
     }
-  }, [allIds, currentIds]);
+  }, [allIds, currentIds, setIds]);
 };
-
-const mergedLocalAndSynced = selectorFamily<Activity | null, UUID>({
-  key: "mergedActivities",
-  get: (uuid) => {
-    return ({ get }) => {
-      const local = get(storedActivities(uuid));
-      let api: Activity | null = null;
-      const loadable = get(noWait(apiMyActivitity(uuid)));
-      if (loadable.state === "hasValue") api = loadable.valueMaybe();
-
-      if (local && api) {
-        return { ...local, ...api } as Activity;
-      }
-
-      return local || api;
-    };
-  },
-});
-
-const allMerged = selector<Activity[]>({
-  key: "allmergedActivities",
-  get: ({ get }) =>
-    get(allMyIds)
-      .map((uuid) => get(mergedLocalAndSynced(uuid)))
-      .filter(Boolean) as Activity[],
-});
 
 const allMyIds = selector<UUID[]>({
   key: "allMyIds",
