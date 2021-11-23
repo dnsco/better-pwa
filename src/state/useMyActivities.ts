@@ -21,7 +21,7 @@ import { apiMyActivities, apiState } from "./api";
 import { Frequency, UUID } from "../api/responseTypes";
 import { SUCCESS } from "../api/base";
 
-const { persistAtom } = recoilPersist();
+export const { persistAtom } = recoilPersist();
 
 export type UseMyActivitiesResult = [Activity[], ActivityFactory];
 export const useMyActivities = (): UseMyActivitiesResult => {

@@ -4,8 +4,8 @@ import { ERROR } from "./base";
 import { Frequency } from "./responseTypes";
 import { Activity, SyncStatus } from "../state/activity";
 
-describe.skip("API INTEGRATOIN", () => {
-  const oauthToken = "PVL2EGwJgYjwiWndR4SCfBTDUBsc0iGfuwlpV5D3G78";
+describe("API INTEGRATOIN", () => {
+  const oauthToken = "9A-F4Jxp86jEpX2jpkorcKR4Iks597sb1pLiA9gr8T0";
   const api = new OauthApi(oauthToken);
 
   it("Fetches my activities", async () => {

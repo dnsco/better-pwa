@@ -2,24 +2,15 @@ import React, { useRef } from "react";
 import { useRecoilState } from "recoil";
 import "./App.css";
 import { Frequency } from "../api/responseTypes";
-import { OauthApi } from "../api/oauthApi";
-import { nullApi } from "../api/nullApi";
-import { apiState } from "../state/api";
+import { oauthState } from "../state/api";
 import { useMyActivities } from "../state/useMyActivities";
 
 export function ActivitiesForm(): JSX.Element {
   const [activities, addNewActivity] = useMyActivities();
-  const [_, setApiState] = useRecoilState(apiState);
+  const [oauthToken, setOauth] = useRecoilState(oauthState);
 
   const oauthTokenInput = useRef<HTMLInputElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
-
-  const setOauthToken = () => {
-    const token = oauthTokenInput.current?.value;
-    const newApi = token ? new OauthApi(token) : nullApi;
-
-    setApiState(newApi);
-  };
 
   const createNewActivity = () => {
     addNewActivity({
@@ -35,10 +26,11 @@ export function ActivitiesForm(): JSX.Element {
           <div>
             <input
               ref={oauthTokenInput}
+              value={oauthToken}
               type="text"
               aria-label="oauth"
               placeholder="oauth token"
-              onChange={setOauthToken}
+              onChange={() => setOauth(oauthTokenInput.current?.value)}
             />
           </div>
 

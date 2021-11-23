@@ -2,12 +2,26 @@ import { atom, selector } from "recoil";
 import { ApiActivity } from "../api/responseTypes";
 import { Api, SUCCESS } from "../api/base";
 import { nullApi } from "../api/nullApi";
+import { persistAtom } from "./useMyActivities";
+import { OauthApi } from "../api/oauthApi";
 
 const FIVE_MINUTES = 300000;
 
+export const oauthState = atom<string | undefined>({
+  key: "oauthToken",
+  default: undefined,
+  effects_UNSTABLE: [persistAtom],
+});
+
 export const apiState = atom<Api>({
   key: "api",
-  default: nullApi,
+  default: selector<Api>({
+    key: "apiState/default",
+    get: ({ get }) => {
+      const token = get(oauthState);
+      return token ? new OauthApi(token) : nullApi;
+    },
+  }),
 });
 
 export const apiMyActivities = selector<ApiActivity[]>({
