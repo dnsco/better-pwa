@@ -22,7 +22,7 @@ import { Frequency, UUID } from "../api/responseTypes";
 import { SUCCESS } from "../api/base";
 import { apiState } from "./oauthState";
 
-const { persistAtom } = recoilPersist();
+const { persistAtom } = recoilPersist({ key: "recoil-my-activities" });
 
 export type UseMyActivitiesResult = [Activity[], ActivityFactory];
 export const useMyActivities = (): UseMyActivitiesResult => {

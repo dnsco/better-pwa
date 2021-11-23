@@ -13,11 +13,11 @@ import { apiState } from "./oauthState";
 
 const { NEW, SYNCED } = SyncStatus;
 
-function contextWithApi(api: Api): RecoilHookRenderer {
-  return recoilHookRenderContext((s) => s.set(apiState, api));
-}
-
 describe("useMyActivities", () => {
+  function contextWithApi(api: Api): RecoilHookRenderer {
+    return recoilHookRenderContext((s) => s.set(apiState, api));
+  }
+
   const activityProps: CreateActivityProps = {
     name: "LOLOLOL",
     frequency: Frequency.DAILY,
@@ -129,37 +129,37 @@ describe("useMyActivities", () => {
       expect(synced.status).toEqual(SYNCED);
     });
   });
+});
 
-  const activityFromLocalStorage = (
-    name: string,
-    activities: Activity[]
-  ): Activity => {
-    const activity = activityNamed(name, activities);
-    const storageMap = JSON.parse(
-      localStorage.getItem("recoil-persist") || "{}"
+const activityFromLocalStorage = (
+  name: string,
+  activities: Activity[],
+  localStorageKey = "recoil-my-activities"
+): Activity => {
+  const activity = activityNamed(name, activities);
+  const localStorageString = localStorage.getItem(localStorageKey) ?? "{}";
+  const storageMap = JSON.parse(localStorageString);
+
+  const fromStorage: Activity | undefined =
+    storageMap[`myActivities__"${activity.uuid}"`];
+
+  if (!fromStorage)
+    throw new Error(
+      `Not found in local Storage– Activity: ${JSON.stringify(activity)}`
     );
 
-    const fromStorage: Activity | undefined =
-      storageMap[`myActivities__"${activity.uuid}"`];
+  return fromStorage;
+};
 
-    if (!fromStorage)
-      throw new Error(
-        `Not found in local Storage– Activity: ${JSON.stringify(activity)}`
-      );
+function activityNamed(name: string, activities: Activity[]): Activity {
+  const filtered = activities.filter((a) => a.name === name);
 
-    return fromStorage;
-  };
-
-  function activityNamed(name: string, activities: Activity[]): Activity {
-    const filtered = activities.filter((a) => a.name === name);
-
-    if (filtered.length !== 1) {
-      const s = JSON.stringify(activities);
-      throw new Error(
-        `There is not exactly one activity named "${name}" in ${s}`
-      );
-    }
-
-    return (filtered as [Activity])[0];
+  if (filtered.length !== 1) {
+    const s = JSON.stringify(activities);
+    throw new Error(
+      `There is not exactly one activity named "${name}" in ${s}`
+    );
   }
-});
+
+  return (filtered as [Activity])[0];
+}
