@@ -2,8 +2,9 @@ import { SetterOrUpdater } from "recoil";
 import { v4 } from "uuid";
 import { ApiActivity } from "../api/responseTypes";
 
-export interface Activity extends ApiActivity {
+export interface Activity extends Omit<ApiActivity, "id"> {
   status: SyncStatus;
+  id?: number | undefined;
 }
 
 export enum SyncStatus {

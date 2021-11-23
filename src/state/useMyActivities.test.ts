@@ -8,8 +8,8 @@ import { useMyActivities } from "./useMyActivities";
 import { Api, ApiPromise, apiPromiseSuccess } from "../api/base";
 import { nullApi } from "../api/nullApi";
 import { ApiActivity, Frequency } from "../api/responseTypes";
-import { apiState } from "./api";
 import { Activity, CreateActivityProps, SyncStatus } from "./activity";
+import { apiState } from "./oauthState";
 
 const { NEW, SYNCED } = SyncStatus;
 
@@ -67,7 +67,7 @@ describe("useMyActivities", () => {
       contextWithApi({
         ...nullApi,
         createActivity(a: Activity): ApiPromise<ApiActivity> {
-          return apiPromiseSuccess(a);
+          return apiPromiseSuccess(a as ApiActivity);
         },
       });
 
@@ -105,6 +105,7 @@ describe("useMyActivities", () => {
       frequency: Frequency.DAILY,
       uuid: v4(),
       name: "Mudkips",
+      id: 19,
     };
 
     it("is a collection of local and remote activiites", async () => {

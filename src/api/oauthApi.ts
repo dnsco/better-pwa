@@ -20,7 +20,7 @@ export class OauthApi implements Api {
     return this.parseResponse(url);
   }
 
-  createActivity(activity: Activity): ApiPromise<Activity> {
+  createActivity(activity: Activity): ApiPromise<ApiActivity> {
     return this.parseResponse(
       "https://better.ngrok.io/api/v0/activities",
       POST,

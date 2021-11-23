@@ -1,17 +1,17 @@
 import { useRecoilValueLoadable } from "recoil";
 import { recoilHookRenderContext } from "recoil-test-render-hooks";
-import { apiMyActivities, apiState } from "./api";
+import { apiMyActivities } from "./api";
 import { ApiActivity, Frequency } from "../api/responseTypes";
 import { Api, ApiPromise, apiPromiseSuccess } from "../api/base";
 import { nullApi } from "../api/nullApi";
-import { Activity, SyncStatus } from "./activity";
+import { apiState } from "./oauthState";
 
 describe("apiMyActivities", () => {
-  const pikachu: Activity = {
+  const pikachu: ApiActivity = {
     frequency: Frequency.DAILY,
     uuid: "lolol-pika",
     name: "pikachu",
-    status: SyncStatus.NEW,
+    id: 2,
   };
 
   describe("With remote activities", () => {

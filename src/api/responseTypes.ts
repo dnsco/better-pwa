@@ -15,4 +15,5 @@ export interface ApiActivity {
   name: string;
   uuid: UUID;
   frequency: Frequency;
+  id: number;
 }

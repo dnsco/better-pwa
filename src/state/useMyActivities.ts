@@ -17,11 +17,12 @@ import {
   createActivityFactory,
   SyncStatus,
 } from "./activity";
-import { apiMyActivities, apiState } from "./api";
+import { apiMyActivities } from "./api";
 import { Frequency, UUID } from "../api/responseTypes";
 import { SUCCESS } from "../api/base";
+import { apiState } from "./oauthState";
 
-export const { persistAtom } = recoilPersist();
+const { persistAtom } = recoilPersist();
 
 export type UseMyActivitiesResult = [Activity[], ActivityFactory];
 export const useMyActivities = (): UseMyActivitiesResult => {

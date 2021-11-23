@@ -2,8 +2,8 @@ import React, { useRef } from "react";
 import { useRecoilState } from "recoil";
 import "./App.css";
 import { Frequency } from "../api/responseTypes";
-import { oauthState } from "../state/api";
 import { useMyActivities } from "../state/useMyActivities";
+import { oauthState } from "../state/oauthState";
 
 export function ActivitiesForm(): JSX.Element {
   const [activities, addNewActivity] = useMyActivities();
