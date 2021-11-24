@@ -1,8 +1,8 @@
 import { v4 } from "uuid";
-import { OauthApi } from "./oauthApi";
-import { ERROR } from "./base";
-import { Frequency } from "./responseTypes";
-import { Activity, SyncStatus } from "../state/activity";
+import { OauthApi } from "../oauthApi";
+import { ERROR } from "../base";
+import { Frequency } from "../responseTypes";
+import { Activity, SyncStatus } from "../../state/activity";
 
 describe("API INTEGRATOIN", () => {
   const oauthToken = "bEYzseGqyy7GXwEy6KEZpIqTew7NYA3kDzZaRVlA6wg";

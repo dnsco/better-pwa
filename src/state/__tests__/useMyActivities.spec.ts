@@ -4,18 +4,18 @@ import {
   RecoilHookRenderer,
 } from "recoil-test-render-hooks";
 import { v4 } from "uuid";
-import { useMyActivities } from "./useMyActivities";
+import { useMyActivities } from "../useMyActivities";
 import {
   Api,
   ApiPromise,
   apiPromiseSuccess,
   ERROR,
   ErrorResponse,
-} from "../api/base";
-import { nullApi } from "../api/nullApi";
-import { ApiActivity, Frequency } from "../api/responseTypes";
-import { Activity, CreateActivityProps, SyncStatus } from "./activity";
-import { apiState } from "./oauthState";
+} from "../../api/base";
+import { nullApi } from "../../api/nullApi";
+import { ApiActivity, Frequency } from "../../api/responseTypes";
+import { Activity, CreateActivityProps, SyncStatus } from "../activity";
+import { apiState } from "../oauthState";
 
 const { NEW, SYNCED } = SyncStatus;
 

@@ -2,7 +2,7 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { RecoilRoot } from "recoil";
 import { act } from "react-dom/test-utils";
-import { ActivitiesForm } from "./ActivitiesForm";
+import { ActivitiesForm } from "../ActivitiesForm";
 
 describe("THE APP", () => {
   async function renderAndCreateActivity() {
