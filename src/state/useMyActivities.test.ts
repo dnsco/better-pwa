@@ -5,7 +5,13 @@ import {
 } from "recoil-test-render-hooks";
 import { v4 } from "uuid";
 import { useMyActivities } from "./useMyActivities";
-import { Api, ApiPromise, apiPromiseSuccess } from "../api/base";
+import {
+  Api,
+  ApiPromise,
+  apiPromiseSuccess,
+  ERROR,
+  ErrorResponse,
+} from "../api/base";
 import { nullApi } from "../api/nullApi";
 import { ApiActivity, Frequency } from "../api/responseTypes";
 import { Activity, CreateActivityProps, SyncStatus } from "./activity";
@@ -18,10 +24,25 @@ describe("useMyActivities", () => {
     return recoilHookRenderContext((s) => s.set(apiState, api));
   }
 
+  const apiWithActivities: Api = {
+    ...nullApi,
+    myActivities(): ApiPromise<ApiActivity[]> {
+      return apiPromiseSuccess([apiMudkips]);
+    },
+  };
+
+  const apiMudkips: ApiActivity = {
+    frequency: Frequency.DAILY,
+    uuid: v4(),
+    name: "Mudkips",
+    id: 19,
+  };
+
   const activityProps: CreateActivityProps = {
     name: "LOLOLOL",
     frequency: Frequency.DAILY,
   };
+
   beforeEach(() => {
     addCleanup(() => localStorage.clear());
   });
@@ -62,34 +83,9 @@ describe("useMyActivities", () => {
     });
   });
 
-  describe("remote activity creation", () => {
-    const makeTestContext = (): RecoilHookRenderer =>
-      contextWithApi({
-        ...nullApi,
-        createActivity(a: Activity): ApiPromise<ApiActivity> {
-          return apiPromiseSuccess(a as ApiActivity);
-        },
-      });
-
-    it("syncs with the API", async () => {
-      // waitFor(() => onCreate.mock.calls.length > 1);
-      const { getCurrentValue } = makeTestContext();
-      const [_, create] = await getCurrentValue(useMyActivities);
-      act(() => create({ frequency: Frequency.DAILY, name: "love" }));
-      const [activities] = await getCurrentValue(useMyActivities);
-      const love = activityFromLocalStorage("love", activities);
-      expect(love?.status).toEqual(SYNCED);
-    });
-  });
-
   describe("when the api has responded with activities", () => {
     const setupTestContext = async (): Promise<RecoilHookRenderer> => {
-      const renderer = contextWithApi({
-        ...nullApi,
-        myActivities(): ApiPromise<ApiActivity[]> {
-          return apiPromiseSuccess([apiMudkips]);
-        },
-      });
+      const renderer = contextWithApi(apiWithActivities);
 
       const { getCurrentValue } = renderer;
       const [_, create] = await getCurrentValue(useMyActivities);
@@ -99,13 +95,6 @@ describe("useMyActivities", () => {
       });
 
       return renderer;
-    };
-
-    const apiMudkips: ApiActivity = {
-      frequency: Frequency.DAILY,
-      uuid: v4(),
-      name: "Mudkips",
-      id: 19,
     };
 
     it("is a collection of local and remote activiites", async () => {
@@ -127,6 +116,80 @@ describe("useMyActivities", () => {
       const synced = activityFromLocalStorage("Mudkips", activities);
       expect(synced.name).toEqual("Mudkips");
       expect(synced.status).toEqual(SYNCED);
+    });
+  });
+
+  describe("remote activity creation", () => {
+    describe("successful sync", () => {
+      const makeTestContext = (): RecoilHookRenderer =>
+        contextWithApi({
+          ...nullApi,
+          createActivity(a: Activity): ApiPromise<ApiActivity> {
+            return apiPromiseSuccess(a as ApiActivity);
+          },
+        });
+
+      it("syncs with the API", async () => {
+        // waitFor(() => onCreate.mock.calls.length > 1);
+        const { getCurrentValue } = makeTestContext();
+        const [_, create] = await getCurrentValue(useMyActivities);
+        act(() => create({ frequency: Frequency.DAILY, name: "love" }));
+        const [activities] = await getCurrentValue(useMyActivities);
+        const love = activityFromLocalStorage("love", activities);
+        expect(love?.status).toEqual(SYNCED);
+      });
+    });
+
+    describe("erroneous states", () => {
+      const BACKEND_ERROR = new Error("Fake backend error lol");
+
+      const makeErrorOnCreateContext = (): [RecoilHookRenderer, Api] => {
+        const errorsOnCreateApi: Api = {
+          ...apiWithActivities,
+
+          myActivities: jest.fn(apiWithActivities.myActivities),
+
+          createActivity: jest.fn(async (): Promise<ErrorResponse> => {
+            return {
+              kind: ERROR,
+              error: BACKEND_ERROR,
+            };
+          }),
+        };
+
+        return [contextWithApi(errorsOnCreateApi), errorsOnCreateApi];
+      };
+
+      describe("when it has synced remote activities", () => {
+        it("does not try to recreate the activities", async () => {
+          const [{ getCurrentValue }, api] = makeErrorOnCreateContext();
+          const [activities] = await getCurrentValue(useMyActivities);
+          expect((api.myActivities as jest.Mock).mock.calls.length).toEqual(1);
+          expect((api.createActivity as jest.Mock).mock.calls.length).toEqual(
+            0
+          );
+
+          expect(activities.length).toEqual(1);
+        });
+      });
+
+      describe("when the api returns an error", () => {
+        it("logs the error", async () => {
+          jest.spyOn(console, "error").mockImplementation(() => {
+            // noop
+          });
+          const [{ getCurrentValue }] = makeErrorOnCreateContext();
+          const [_, create] = await getCurrentValue(useMyActivities);
+
+          await act(async () => {
+            await create({ frequency: Frequency.DAILY, name: "lolol" });
+            await new Promise((r) => setImmediate(r));
+          });
+
+          // eslint-disable-next-line no-console
+          expect(console.error).toHaveBeenCalledWith(BACKEND_ERROR);
+        });
+      });
     });
   });
 });

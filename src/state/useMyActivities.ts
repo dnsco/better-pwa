@@ -117,11 +117,17 @@ const createNew: (uuid: UUID) => AtomEffect<Activity> =
       // if oldValue === null && newValue.state === NEW
       const api = getLoadable(apiState).valueOrThrow();
 
-      api.createActivity(newValue).then((resp) => {
-        if (resp.kind === SUCCESS) {
-          setSelf({ ...newValue, ...resp.data, status: SyncStatus.SYNCED });
-        }
-      });
+      if (newValue.status === SyncStatus.NEW) {
+        api.createActivity(newValue).then((resp) => {
+          if (resp.kind === SUCCESS) {
+            setSelf({ ...newValue, ...resp.data, status: SyncStatus.SYNCED });
+          } else {
+            // todo: better error handling on response, but that's for later.
+            // eslint-disable-next-line no-console
+            console.error(resp.error);
+          }
+        });
+      }
     });
   };
 

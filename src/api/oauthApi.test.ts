@@ -5,7 +5,7 @@ import { Frequency } from "./responseTypes";
 import { Activity, SyncStatus } from "../state/activity";
 
 describe("API INTEGRATOIN", () => {
-  const oauthToken = "9A-F4Jxp86jEpX2jpkorcKR4Iks597sb1pLiA9gr8T0";
+  const oauthToken = "bEYzseGqyy7GXwEy6KEZpIqTew7NYA3kDzZaRVlA6wg";
   const api = new OauthApi(oauthToken);
 
   it("Fetches my activities", async () => {
