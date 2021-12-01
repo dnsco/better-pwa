@@ -1,6 +1,6 @@
 import { Api, ApiPromise } from "./base";
 import { ApiActivity } from "./responseTypes";
-import { Activity } from "../state/activity";
+import { Activity } from "../state/myActivities";
 
 const NOOP = () => {}; // eslint-disable-line @typescript-eslint/no-empty-function
 

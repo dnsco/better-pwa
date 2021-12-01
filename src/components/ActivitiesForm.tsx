@@ -2,11 +2,13 @@ import React, { useRef } from "react";
 import { useRecoilState } from "recoil";
 import "./App.css";
 import { Frequency } from "../api/responseTypes";
-import { useMyActivities } from "../state/useMyActivities";
+import { useMergedActivities } from "../state/useMergedActivities";
 import { oauthState } from "../state/oauthState";
+import { useActivityFactory } from "../state/useActivityFactory";
 
 export function ActivitiesForm(): JSX.Element {
-  const [activities, addNewActivity] = useMyActivities();
+  const activities = useMergedActivities();
+  const addNewActivity = useActivityFactory();
   const [oauthToken, setOauth] = useRecoilState(oauthState);
 
   const oauthTokenInput = useRef<HTMLInputElement>(null);

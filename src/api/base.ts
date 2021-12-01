@@ -1,5 +1,5 @@
 import { ApiActivity } from "./responseTypes";
-import { Activity } from "../state/activity";
+import { Activity } from "../state/myActivities";
 
 export interface Api {
   myActivities(): ApiPromise<ApiActivity[]>;

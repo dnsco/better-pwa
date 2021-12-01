@@ -4,7 +4,7 @@ import {
   RecoilHookRenderer,
 } from "recoil-test-render-hooks";
 import { v4 } from "uuid";
-import { useMyActivities } from "../useMyActivities";
+import { useMergedActivities } from "../useMergedActivities";
 import {
   Api,
   ApiPromise,
@@ -14,8 +14,9 @@ import {
 } from "../../api/base";
 import { nullApi } from "../../api/nullApi";
 import { ApiActivity, Frequency } from "../../api/responseTypes";
-import { Activity, CreateActivityProps, SyncStatus } from "../activity";
+import { Activity, SyncStatus } from "../myActivities";
 import { apiState } from "../oauthState";
+import { CreateActivityProps, useActivityFactory } from "../useActivityFactory";
 
 const { NEW, SYNCED } = SyncStatus;
 
@@ -60,7 +61,8 @@ describe("useMyActivities", () => {
 
     it("Adds Activities to a list", async () => {
       const { getCurrentValue } = makeTestContext();
-      let [activities, createActivity] = await getCurrentValue(useMyActivities);
+      let activities = await getCurrentValue(useMergedActivities);
+      const createActivity = await getCurrentValue(useActivityFactory);
       expect(activities.length).toEqual(0);
 
       await act(async () => {
@@ -68,17 +70,18 @@ describe("useMyActivities", () => {
         await new Promise(setImmediate);
       });
 
-      [activities, createActivity] = await getCurrentValue(useMyActivities);
+      activities = await getCurrentValue(useMergedActivities);
+
       expect(activities).toHaveLength(1);
 
       act(() => createActivity({ ...activityProps, name: "second" }));
-      [activities] = await getCurrentValue(useMyActivities);
+      activities = await getCurrentValue(useMergedActivities);
       expect(activities).toHaveLength(2);
     });
 
     it("has a clean slate", async () => {
       const { getCurrentValue } = makeTestContext();
-      const [activities] = await getCurrentValue(useMyActivities);
+      const activities = await getCurrentValue(useMergedActivities);
       expect(activities).toHaveLength(0);
     });
   });
@@ -88,7 +91,7 @@ describe("useMyActivities", () => {
       const renderer = contextWithApi(apiWithActivities);
 
       const { getCurrentValue } = renderer;
-      const [_, create] = await getCurrentValue(useMyActivities);
+      const create = await getCurrentValue(useActivityFactory);
 
       await act(async () => {
         create({ frequency: Frequency.DAILY, name: "pikachu" });
@@ -99,7 +102,7 @@ describe("useMyActivities", () => {
 
     it("is a collection of local and remote activiites", async () => {
       const { getCurrentValue } = await setupTestContext();
-      const [activities] = await getCurrentValue(useMyActivities);
+      const activities = await getCurrentValue(useMergedActivities);
       expect(activities).toHaveLength(2);
       expect(activityNamed("pikachu", activities).status).toEqual(NEW);
       expect(activityNamed("Mudkips", activities).status).toEqual(SYNCED);
@@ -107,7 +110,7 @@ describe("useMyActivities", () => {
 
     it("perists the merged versions to local storage", async () => {
       const { getCurrentValue } = await setupTestContext();
-      const [activities] = await getCurrentValue(useMyActivities);
+      const activities = await getCurrentValue(useMergedActivities);
 
       const pikachu = activityFromLocalStorage("pikachu", activities);
       expect(pikachu.name).toEqual("pikachu");
@@ -132,9 +135,9 @@ describe("useMyActivities", () => {
       it("syncs with the API", async () => {
         // waitFor(() => onCreate.mock.calls.length > 1);
         const { getCurrentValue } = makeTestContext();
-        const [_, create] = await getCurrentValue(useMyActivities);
+        const create = await getCurrentValue(useActivityFactory);
         act(() => create({ frequency: Frequency.DAILY, name: "love" }));
-        const [activities] = await getCurrentValue(useMyActivities);
+        const activities = await getCurrentValue(useMergedActivities);
         const love = activityFromLocalStorage("love", activities);
         expect(love?.status).toEqual(SYNCED);
       });
@@ -163,7 +166,7 @@ describe("useMyActivities", () => {
       describe("when it has synced remote activities", () => {
         it("does not try to recreate the activities", async () => {
           const [{ getCurrentValue }, api] = makeErrorOnCreateContext();
-          const [activities] = await getCurrentValue(useMyActivities);
+          const activities = await getCurrentValue(useMergedActivities);
           expect((api.myActivities as jest.Mock).mock.calls.length).toEqual(1);
           expect((api.createActivity as jest.Mock).mock.calls.length).toEqual(
             0
@@ -179,7 +182,7 @@ describe("useMyActivities", () => {
             // noop
           });
           const [{ getCurrentValue }] = makeErrorOnCreateContext();
-          const [_, create] = await getCurrentValue(useMyActivities);
+          const create = await getCurrentValue(useActivityFactory);
 
           await act(async () => {
             await create({ frequency: Frequency.DAILY, name: "lolol" });

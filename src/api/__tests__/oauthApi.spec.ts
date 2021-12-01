@@ -2,9 +2,9 @@ import { v4 } from "uuid";
 import { OauthApi } from "../oauthApi";
 import { ERROR } from "../base";
 import { Frequency } from "../responseTypes";
-import { Activity, SyncStatus } from "../../state/activity";
+import { Activity, SyncStatus } from "../../state/myActivities";
 
-describe.skip("API INTEGRATOIN", () => {
+describe("API INTEGRATOIN", () => {
   const oauthToken = "iEoUegaqmgpStUnPlBLGF3M3L4KvAEzt54kI_e7Oap0";
   const api = new OauthApi(oauthToken);
 

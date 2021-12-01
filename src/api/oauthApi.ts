@@ -1,6 +1,6 @@
 import { Api, ApiPromise, ERROR, ErrorResponse, SUCCESS } from "./base";
 import { ApiActivity } from "./responseTypes";
-import { Activity } from "../state/activity";
+import { Activity } from "../state/myActivities";
 
 enum HTTPMethod {
   GET = "GET",
