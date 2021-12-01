@@ -2,9 +2,9 @@ import React, { useRef } from "react";
 import { useRecoilState } from "recoil";
 import "./App.css";
 import { Frequency } from "../api/responseTypes";
-import { useMergedActivities } from "../state/useMergedActivities";
+import { useMergedActivities } from "../state/hooks/useMergedActivities";
 import { oauthState } from "../state/oauthState";
-import { useActivityFactory } from "../state/useActivityFactory";
+import { useActivityFactory } from "../state/hooks/useActivityFactory";
 
 export function ActivitiesForm(): JSX.Element {
   const activities = useMergedActivities();

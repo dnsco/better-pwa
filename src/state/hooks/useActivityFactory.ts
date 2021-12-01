@@ -5,7 +5,7 @@ import {
   storedActivities,
   storedIds,
   SyncStatus,
-} from "./myActivities";
+} from "../myActivities";
 
 export type CreateActivityProps = Omit<Activity, "uuid" | "status">;
 type ActivityFactory = (activity: CreateActivityProps) => void;
@@ -21,7 +21,7 @@ const newActivity = selector<CreateActivityProps | null>({
   set: ({ get, set }, props) => {
     if (!props || props instanceof DefaultValue) return;
     const uuid = v4();
-    const idsWithNew = Array.from(new Set([...get(storedIds), uuid])).sort();
+    const idsWithNew = Array.from(new Set([...get(storedIds), uuid])).sort(); // todo: should this set + sort be an effect on the stored atom?
 
     set(storedIds, idsWithNew);
     set(storedActivities(uuid), {

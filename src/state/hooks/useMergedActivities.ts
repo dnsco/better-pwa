@@ -10,9 +10,9 @@ import {
   storedActivities,
   storedIds,
   SyncStatus,
-} from "./myActivities";
-import { apiMyActivities } from "./api";
-import { UUID } from "../api/responseTypes";
+} from "../myActivities";
+import { apiMyActivities } from "../api";
+import { UUID } from "../../api/responseTypes";
 
 export const useMergedActivities = (): Activity[] => {
   useMergeApiActivities();
@@ -21,7 +21,9 @@ export const useMergedActivities = (): Activity[] => {
 
 /**
  * Sync remote activities with the local store.
- * must be in a react effect, because recoil atom effects cannot subscribe to selectors (allMyIds)
+ * must be in a react effect because:
+ * - recoil atom effects cannot subscribe to selectors (allMyIds)
+ * - we need to set the individual atoms to persist them
  */
 const useMergeApiActivities = () => {
   const ids = useRecoilValue(allMyIds);

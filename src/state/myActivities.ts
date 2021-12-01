@@ -24,12 +24,6 @@ export const storedActivities = atomFamily<Activity, UUID>({
   },
 });
 
-const DEFAULT_ACTIVITY: Omit<Activity, "uuid"> = {
-  frequency: Frequency.DAILY,
-  name: "New Default",
-  status: SyncStatus.SYNCED,
-};
-
 const createNew: (uuid: UUID) => AtomEffect<Activity> =
   (_: UUID) =>
   ({ setSelf, getLoadable, onSet }) => {
@@ -50,6 +44,12 @@ const createNew: (uuid: UUID) => AtomEffect<Activity> =
       }
     });
   };
+
+const DEFAULT_ACTIVITY: Omit<Activity, "uuid"> = {
+  frequency: Frequency.DAILY,
+  name: "New Default",
+  status: SyncStatus.SYNCED,
+};
 
 export const storedIds = atom<UUID[]>({
   key: "localActivityIds",

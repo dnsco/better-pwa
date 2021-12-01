@@ -11,11 +11,11 @@ import {
   apiPromiseSuccess,
   ERROR,
   ErrorResponse,
-} from "../../api/base";
-import { nullApi } from "../../api/nullApi";
-import { ApiActivity, Frequency } from "../../api/responseTypes";
-import { Activity, SyncStatus } from "../myActivities";
-import { apiState } from "../oauthState";
+} from "../../../api/base";
+import { nullApi } from "../../../api/nullApi";
+import { ApiActivity, Frequency } from "../../../api/responseTypes";
+import { Activity, SyncStatus } from "../../myActivities";
+import { apiState } from "../../oauthState";
 import { CreateActivityProps, useActivityFactory } from "../useActivityFactory";
 
 const { NEW, SYNCED } = SyncStatus;
