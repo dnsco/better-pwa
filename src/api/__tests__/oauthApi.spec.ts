@@ -4,8 +4,8 @@ import { ERROR } from "../base";
 import { Frequency } from "../responseTypes";
 import { Activity, SyncStatus } from "../../state/activity";
 
-describe("API INTEGRATOIN", () => {
-  const oauthToken = "bEYzseGqyy7GXwEy6KEZpIqTew7NYA3kDzZaRVlA6wg";
+describe.skip("API INTEGRATOIN", () => {
+  const oauthToken = "iEoUegaqmgpStUnPlBLGF3M3L4KvAEzt54kI_e7Oap0";
   const api = new OauthApi(oauthToken);
 
   it("Fetches my activities", async () => {
@@ -25,7 +25,7 @@ describe("API INTEGRATOIN", () => {
       frequency: Frequency.DAILY,
       status: SyncStatus.NEW,
       uuid: v4(),
-      name: "Palestine",
+      name: "MadeInJSOauthTestLOL",
     };
 
     const createResponse = await api.createActivity(a);
@@ -33,6 +33,6 @@ describe("API INTEGRATOIN", () => {
     if (createResponse.kind === ERROR) {
       throw createResponse.error;
     }
-    expect(createResponse.data.name).toEqual("Palestine");
+    expect(createResponse.data.name).toEqual("MadeInJSOauthTestLOL");
   });
 });

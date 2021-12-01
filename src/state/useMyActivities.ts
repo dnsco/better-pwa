@@ -104,7 +104,7 @@ const DEFAULT_ACTIVITY: Activity = {
  */
 const storedActivities = atomFamily<Activity, UUID>({
   key: "myActivities",
-  default: DEFAULT_ACTIVITY,
+  default: (uuid) => ({ ...DEFAULT_ACTIVITY, uuid }),
   effects_UNSTABLE: (uuid): AtomEffect<Activity>[] => {
     return [persistAtom, createNew(uuid)];
   },
