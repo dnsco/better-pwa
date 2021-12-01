@@ -1,8 +1,13 @@
 import { useRecoilValueLoadable } from "recoil";
 import { recoilHookRenderContext } from "recoil-test-render-hooks";
 import { apiMyActivities } from "../api";
-import { ApiActivity, Frequency } from "../../api/responseTypes";
-import { Api, ApiPromise, apiPromiseSuccess } from "../../api/base";
+import {
+  Api,
+  ApiActivity,
+  ApiPromise,
+  apiPromiseSuccess,
+  Frequency,
+} from "../../api/base";
 import { nullApi } from "../../api/nullApi";
 import { apiState } from "../oauthState";
 

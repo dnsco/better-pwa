@@ -1,5 +1,4 @@
-import { Api, ApiPromise } from "./base";
-import { ApiActivity } from "./responseTypes";
+import { Api, ApiActivity, ApiActivityCompletion, ApiPromise } from "./base";
 import { Activity } from "../state/myActivities";
 
 const NOOP = () => {}; // eslint-disable-line @typescript-eslint/no-empty-function
@@ -10,6 +9,10 @@ export const nullApi: Api = {
   },
 
   createActivity(_: Activity): ApiPromise<ApiActivity> {
+    return new Promise(NOOP);
+  },
+
+  activityCompletions(): ApiPromise<ApiActivityCompletion[]> {
     return new Promise(NOOP);
   },
 };

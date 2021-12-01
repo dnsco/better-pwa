@@ -1,8 +1,7 @@
 import { atom, AtomEffect, atomFamily } from "recoil";
 import { recoilPersist } from "recoil-persist";
-import { ApiActivity, Frequency, UUID } from "../api/responseTypes";
 import { apiState } from "./oauthState";
-import { SUCCESS } from "../api/base";
+import { ApiActivity, Frequency, SUCCESS, UUID } from "../api/base";
 
 export interface Activity extends Omit<ApiActivity, "id"> {
   status: SyncStatus;

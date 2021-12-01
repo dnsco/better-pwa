@@ -7,13 +7,14 @@ import { v4 } from "uuid";
 import { useMergedActivities } from "../useMergedActivities";
 import {
   Api,
+  ApiActivity,
   ApiPromise,
   apiPromiseSuccess,
   ERROR,
   ErrorResponse,
+  Frequency,
 } from "../../../api/base";
 import { nullApi } from "../../../api/nullApi";
-import { ApiActivity, Frequency } from "../../../api/responseTypes";
 import { Activity, SyncStatus } from "../../myActivities";
 import { apiState } from "../../oauthState";
 import { CreateActivityProps, useActivityFactory } from "../useActivityFactory";

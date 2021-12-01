@@ -1,38 +1,65 @@
 import { v4 } from "uuid";
 import { OauthApi } from "../oauthApi";
-import { ERROR } from "../base";
-import { Frequency } from "../responseTypes";
+import { ApiWrappedResponse, ERROR, Frequency } from "../base";
 import { Activity, SyncStatus } from "../../state/myActivities";
 
-describe("API INTEGRATOIN", () => {
-  const oauthToken = "iEoUegaqmgpStUnPlBLGF3M3L4KvAEzt54kI_e7Oap0";
+function newActivity(props: Partial<Activity>): Activity {
+  const uuid = v4();
+  return {
+    frequency: Frequency.DAILY,
+    status: SyncStatus.NEW,
+    uuid,
+    name: `NewActivity${uuid}`,
+    ...props,
+  };
+}
+
+describe.skip("API INTEGRATION", () => {
+  const oauthToken = "Nb2V_5Lk8RHbs0s9mIMp80LiNxDkuFUk4d2gkqQrcAg";
   const api = new OauthApi(oauthToken);
 
-  it("Fetches my activities", async () => {
-    const activitiesResp = await api.myActivities();
+  describe("myActivities", () => {
+    it("Fetches my activities", async () => {
+      const activities = dataOrThrow(await api.myActivities());
+      expect(activities.length).toBeGreaterThan(0);
+    });
 
-    if (activitiesResp.kind === ERROR) {
-      throw activitiesResp.error;
-    }
+    it("can create shit", async () => {
+      const name = "MadeInJSOauthTestLOL";
+      const response = await api.createActivity(newActivity({ name }));
 
-    const activities = activitiesResp.data;
-
-    expect(activities.length).toBeGreaterThan(0);
+      const activity = dataOrThrow(response);
+      expect(activity.name).toEqual(name);
+    });
   });
 
-  it("can create shit", async () => {
-    const a: Activity = {
-      frequency: Frequency.DAILY,
-      status: SyncStatus.NEW,
-      uuid: v4(),
-      name: "MadeInJSOauthTestLOL",
-    };
+  describe("activityCompletions", () => {
+    it("has them or somethinglol", async () => {
+      const createActivityResp = await api.createActivity(
+        newActivity({ name: "HEYYY" })
+      );
 
-    const createResponse = await api.createActivity(a);
+      const activityId = dataOrThrow(createActivityResp).uuid;
 
-    if (createResponse.kind === ERROR) {
-      throw createResponse.error;
-    }
-    expect(createResponse.data.name).toEqual("MadeInJSOauthTestLOL");
+      const fetchCompletions = async () =>
+        dataOrThrow(await api.activityCompletions({ activityId }));
+
+      expect(await fetchCompletions()).toHaveLength(0);
+
+      const doneAt = new Date();
+      const uuid = v4();
+      const createResponse = await api.completeActivity(activityId, {
+        doneAt,
+        uuid,
+      });
+
+      expect(dataOrThrow(createResponse).uuid).toEqual(uuid);
+      expect(await fetchCompletions()).toHaveLength(1);
+    });
   });
+
+  function dataOrThrow<T>(response: ApiWrappedResponse<T>): T {
+    if (response.kind === ERROR) throw response.error;
+    return response.data;
+  }
 });

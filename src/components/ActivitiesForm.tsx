@@ -1,10 +1,12 @@
 import React, { useRef } from "react";
 import { useRecoilState } from "recoil";
 import "./App.css";
-import { Frequency } from "../api/responseTypes";
 import { useMergedActivities } from "../state/hooks/useMergedActivities";
 import { oauthState } from "../state/oauthState";
 import { useActivityFactory } from "../state/hooks/useActivityFactory";
+import { Frequency } from "../api/base";
+import { Activity } from "../state/myActivities";
+import { ActivityCompletion } from "../state/hooks/useActivityCompletions";
 
 export function ActivitiesForm(): JSX.Element {
   const activities = useMergedActivities();
@@ -47,13 +49,7 @@ export function ActivitiesForm(): JSX.Element {
           </button>
           <div>
             {activities.map((a) => (
-              <div
-                data-testid={`activity-${a.name}`}
-                data-uuid={a.uuid}
-                key={a.uuid}
-              >
-                {a.name}
-              </div>
+              <ActivitySection activity={a} key={a.uuid} />
             ))}
           </div>
         </div>
@@ -61,3 +57,19 @@ export function ActivitiesForm(): JSX.Element {
     </div>
   );
 }
+
+const ActivitySection: React.FC<{ activity: Activity }> = ({ activity }) => {
+  // const completions = useActivityCompletions(activity.uuid);
+
+  return (
+    <div data-testid={`activity-${activity.name}`} data-uuid={activity.uuid}>
+      {activity.name}
+      <ol>
+        {/* {completions.map((c) => ( */}
+        {([] as ActivityCompletion[]).map((c) => (
+          <li key={c.uuid}>{c.doneAt.toISOString()}</li>
+        ))}
+      </ol>
+    </div>
+  );
+};

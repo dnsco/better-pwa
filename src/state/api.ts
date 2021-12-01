@@ -1,6 +1,5 @@
 import { atom, selector } from "recoil";
-import { ApiActivity } from "../api/responseTypes";
-import { SUCCESS } from "../api/base";
+import { ApiActivity, SUCCESS } from "../api/base";
 import { apiState } from "./oauthState";
 
 const FIVE_MINUTES = 300000;

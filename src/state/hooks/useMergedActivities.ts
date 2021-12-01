@@ -12,7 +12,7 @@ import {
   SyncStatus,
 } from "../myActivities";
 import { apiMyActivities } from "../api";
-import { UUID } from "../../api/responseTypes";
+import { UUID } from "../../api/base";
 
 export const useMergedActivities = (): Activity[] => {
   useMergeApiActivities();

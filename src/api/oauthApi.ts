@@ -1,5 +1,13 @@
-import { Api, ApiPromise, ERROR, ErrorResponse, SUCCESS } from "./base";
-import { ApiActivity } from "./responseTypes";
+import {
+  Api,
+  ApiActivity,
+  ApiActivityCompletion,
+  ApiPromise,
+  ERROR,
+  ErrorResponse,
+  SUCCESS,
+  UUID,
+} from "./base";
 import { Activity } from "../state/myActivities";
 
 enum HTTPMethod {
@@ -27,6 +35,29 @@ export class OauthApi implements Api {
       { activity }
     );
   }
+
+  activityCompletions({
+    activityId,
+  }: {
+    activityId: UUID;
+  }): ApiPromise<ApiActivityCompletion[]> {
+    return this.parseResponse(this.completionsUrl(activityId));
+  }
+
+  completeActivity(
+    activityId: UUID,
+    params: { doneAt: Date; uuid: UUID }
+  ): ApiPromise<ApiActivityCompletion> {
+    return this.parseResponse(this.completionsUrl(activityId), POST, {
+      completion: {
+        done_at: params.doneAt,
+        uuid: params.uuid,
+      },
+    });
+  }
+
+  completionsUrl = (activityId: string): string =>
+    `https://better.ngrok.io/api/v0/activities/${activityId}/completions`;
 
   private parseResponse<T, B>(
     url: string,
