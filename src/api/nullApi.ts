@@ -1,7 +1,11 @@
-import { Api, ApiActivity, ApiActivityCompletion, ApiPromise } from "./base";
+import {
+  Api,
+  ApiActivity,
+  ApiActivityCompletion,
+  ApiPromise,
+  NOOP,
+} from "./base";
 import { Activity } from "../state/myActivities";
-
-const NOOP = () => {}; // eslint-disable-line @typescript-eslint/no-empty-function
 
 export const nullApi: Api = {
   myActivities(): ApiPromise<ApiActivity[]> {

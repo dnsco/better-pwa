@@ -1,5 +1,7 @@
 import { Activity } from "../state/myActivities";
 
+export const NOOP = () => {}; // eslint-disable-line @typescript-eslint/no-empty-function
+
 export interface Api {
   myActivities(): ApiPromise<ApiActivity[]>;
   createActivity(activity: Activity): ApiPromise<ApiActivity>;

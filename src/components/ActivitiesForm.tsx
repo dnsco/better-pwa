@@ -6,7 +6,10 @@ import { oauthState } from "../state/oauthState";
 import { useActivityFactory } from "../state/hooks/useActivityFactory";
 import { Frequency } from "../api/base";
 import { Activity } from "../state/myActivities";
-import { ActivityCompletion } from "../state/hooks/useActivityCompletions";
+import {
+  ActivityCompletion,
+  useActivityCompletions,
+} from "../state/hooks/useActivityCompletions";
 
 export function ActivitiesForm(): JSX.Element {
   const activities = useMergedActivities();
@@ -59,14 +62,13 @@ export function ActivitiesForm(): JSX.Element {
 }
 
 const ActivitySection: React.FC<{ activity: Activity }> = ({ activity }) => {
-  // const completions = useActivityCompletions(activity.uuid);
+  const completions = useActivityCompletions(activity.uuid);
 
   return (
     <div data-testid={`activity-${activity.name}`} data-uuid={activity.uuid}>
       {activity.name}
       <ol>
-        {/* {completions.map((c) => ( */}
-        {([] as ActivityCompletion[]).map((c) => (
+        {completions.map((c) => (
           <li key={c.uuid}>{c.doneAt.toISOString()}</li>
         ))}
       </ol>

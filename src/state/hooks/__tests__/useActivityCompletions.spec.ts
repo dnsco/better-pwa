@@ -8,6 +8,7 @@ import {
   Api,
   ApiActivityCompletion,
   apiPromiseSuccess,
+  NOOP,
   UUID,
 } from "../../../api/base";
 
@@ -52,5 +53,23 @@ describe("useActivityCompletions", () => {
     );
     expect(completions).toHaveLength(2);
     expect(completions[0]?.doneAt).toEqual(FIRST_DONE_AT);
+  });
+
+  describe("When the api has not yet returned", () => {
+    it("returns an empty array", async () => {
+      const { getCurrentValue } = recoilHookRenderContext((s) =>
+        s.set(apiState, {
+          ...nullApi,
+          activityCompletions() {
+            return new Promise(NOOP); // pending
+          },
+        })
+      );
+
+      const completions = await getCurrentValue(() =>
+        useActivityCompletions(ACTIVITY_ID_2_COMPLETIONS)
+      );
+      expect(completions).toHaveLength(0);
+    });
   });
 });

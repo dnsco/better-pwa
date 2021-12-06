@@ -1,4 +1,4 @@
-import { selectorFamily, useRecoilValue } from "recoil";
+import { selectorFamily, useRecoilValue, useRecoilValueLoadable } from "recoil";
 import { apiState } from "../oauthState";
 import { SUCCESS, UUID } from "../../api/base";
 import { shouldFetchOwnActivitiesAt } from "../api";
@@ -8,10 +8,9 @@ export type ActivityCompletion = { uuid: UUID; doneAt: Date };
 export const useActivityCompletions = (
   activtyId: UUID
 ): ActivityCompletion[] => {
-  return useRecoilValue(apiCompletions(activtyId));
-  // if (loadable.state !== "hasValue") return [];
-
-  // return loadable.valueOrThrow();
+  const loadable = useRecoilValueLoadable(apiCompletions(activtyId));
+  if (loadable.state !== "hasValue") return [];
+  return loadable.valueOrThrow();
 };
 
 const apiCompletions = selectorFamily<ActivityCompletion[], UUID>({

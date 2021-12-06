@@ -15,7 +15,7 @@ function newActivity(props: Partial<Activity>): Activity {
 }
 
 describe.skip("API INTEGRATION", () => {
-  const oauthToken = "Nb2V_5Lk8RHbs0s9mIMp80LiNxDkuFUk4d2gkqQrcAg";
+  const oauthToken = "JnHos_Osz4ZNPZxG0BqzKQmyxNsb3yZ0Faz-M3tg6ys";
   const api = new OauthApi(oauthToken);
 
   describe("myActivities", () => {
